@@ -1,0 +1,258 @@
+name: ntc
+
+services:
+  ntc-webcall:
+    build:
+      context: .
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-webcall
+    restart: unless-stopped
+    ports:
+      - "1967:1967"
+    environment:
+      NTC_DB_PATH: ${NTC_DB_PATH:-/app/data/ntccast.db}
+      NTC_SECRET_KEY: ${NTC_SECRET_KEY:-change-me}
+      NTC_DEFAULT_PIN: ${NTC_DEFAULT_PIN:-7070}
+      NTC_PUBLIC_NAME: ${NTC_PUBLIC_NAME:-NTC Newark WebCall}
+      NTC_LISTENER_NAME: ${NTC_LISTENER_NAME:-NTC Newark WebCall}
+      NTC_CALL_IN_NUMBER: ${NTC_CALL_IN_NUMBER:-+1 862 872 7904}
+      NTC_CALL_IN_PIN: ${NTC_CALL_IN_PIN:-7070}
+      NTC_AGENT_PUBLIC_BASE_URL: ${NTC_AGENT_PUBLIC_BASE_URL:-https://ntcnas.myftp.org/webcall}
+      NTC_TELEPHONY_PUBLIC_BASE_URL: ${NTC_TELEPHONY_PUBLIC_BASE_URL:-https://ntcnas.myftp.org/webcall}
+      NTC_POST_END_SILENCE_GRACE_SECONDS: ${NTC_POST_END_SILENCE_GRACE_SECONDS:-300}
+      NTC_STREAM_PROFILE: ${NTC_STREAM_PROFILE:-wav_pcm24}
+      NTC_BROWSER_GAIN_DB: ${NTC_BROWSER_GAIN_DB:-0}
+      NTC_ADMIN_PASSWORD: ${NTC_ADMIN_PASSWORD:-change-me}
+      NTC_TELEPHONY_SECRET: ${NTC_TELEPHONY_SECRET:-change-me}
+      NTC_TWILIO_WEBHOOK_TOKEN: ${NTC_TWILIO_WEBHOOK_TOKEN:-change-me}
+      NTC_TELNYX_WEBHOOK_TOKEN: ${NTC_TELNYX_WEBHOOK_TOKEN:-change-me}
+      NTC_TELEPHONY_MONO_MIX: ${NTC_TELEPHONY_MONO_MIX:-left}
+      NTC_TELEPHONY_DSP_ENABLED: ${NTC_TELEPHONY_DSP_ENABLED:-0}
+      NTC_TELEPHONY_GAIN_DB: ${NTC_TELEPHONY_GAIN_DB:-0}
+      NTC_TELEPHONY_SESSION_TTL_SECONDS: ${NTC_TELEPHONY_SESSION_TTL_SECONDS:-300}
+      NTC_TELEPHONY_CLOSURE_TTL_SECONDS: ${NTC_TELEPHONY_CLOSURE_TTL_SECONDS:-600}
+      NTC_TELEPHONY_PROMPT_DIR: ${NTC_TELEPHONY_PROMPT_DIR:-/app/data/prompts}
+      NTC_TWILIO_VERIFY_CODE: ${NTC_TWILIO_VERIFY_CODE:-}
+      NTC_TWILIO_VERIFY_CALLER_ID: ${NTC_TWILIO_VERIFY_CALLER_ID:-+14157234000}
+      NTC_TELNYX_TRANSPORT: ${NTC_TELNYX_TRANSPORT:-websocket}
+      NTC_TELNYX_STREAM_CODEC: ${NTC_TELNYX_STREAM_CODEC:-G722}
+      NTC_TELNYX_STREAM_SAMPLE_RATE: ${NTC_TELNYX_STREAM_SAMPLE_RATE:-8000}
+      NTC_TELNYX_STREAM_FRAME_MS: ${NTC_TELNYX_STREAM_FRAME_MS:-60}
+      NTC_TELNYX_STARTUP_BUFFER_FRAMES: ${NTC_TELNYX_STARTUP_BUFFER_FRAMES:-30}
+      NTC_TELNYX_TARGET_BUFFER_FRAMES: ${NTC_TELNYX_TARGET_BUFFER_FRAMES:-48}
+      NTC_TELNYX_MAX_BUFFER_FRAMES: ${NTC_TELNYX_MAX_BUFFER_FRAMES:-128}
+      NTC_TELNYX_RECENT_FRAME_REUSE_SECONDS: ${NTC_TELNYX_RECENT_FRAME_REUSE_SECONDS:-0.5}
+      NTC_TELNYX_SHARED_PCM_ENABLED: ${NTC_TELNYX_SHARED_PCM_ENABLED:-1}
+      NTC_TELNYX_RTP_HEADER_ENABLED: ${NTC_TELNYX_RTP_HEADER_ENABLED:-0}
+      NTC_TELNYX_STREAM_RECONNECT_ENABLED: ${NTC_TELNYX_STREAM_RECONNECT_ENABLED:-1}
+      NTC_TELNYX_OPUS_APPLICATION: ${NTC_TELNYX_OPUS_APPLICATION:-audio}
+      NTC_TELNYX_OPUS_BITRATE: ${NTC_TELNYX_OPUS_BITRATE:-48000}
+      NTC_TELNYX_OPUS_SIGNAL: ${NTC_TELNYX_OPUS_SIGNAL:-music}
+      NTC_TELNYX_TEST_SIGNAL: ${NTC_TELNYX_TEST_SIGNAL:-}
+      NTC_TELNYX_TEST_SIGNAL_HZ: ${NTC_TELNYX_TEST_SIGNAL_HZ:-440}
+      NTC_TELNYX_TEST_SIGNAL_GAIN: ${NTC_TELNYX_TEST_SIGNAL_GAIN:-0.18}
+      NTC_TELNYX_DEBUG_TAP_ENABLED: ${NTC_TELNYX_DEBUG_TAP_ENABLED:-0}
+      NTC_TELNYX_DEBUG_TAP_DIR: ${NTC_TELNYX_DEBUG_TAP_DIR:-/app/data/telnyx-debug-taps}
+      NTC_TELNYX_DEBUG_TAP_MAX_SECONDS: ${NTC_TELNYX_DEBUG_TAP_MAX_SECONDS:-300}
+      NTC_TELNYX_SMS_LOG_PATH: ${NTC_TELNYX_SMS_LOG_PATH:-/app/data/telnyx-sms-webhooks.jsonl}
+      NTC_HLS_PLAYLIST_LENGTH: ${NTC_HLS_PLAYLIST_LENGTH:-30}
+      NTC_HLS_DELETE_THRESHOLD: ${NTC_HLS_DELETE_THRESHOLD:-180}
+      NTC_HLS_AUDIO_BITRATE: ${NTC_HLS_AUDIO_BITRATE:-256k}
+      NTC_HLS_START_TIMEOUT_SECONDS: ${NTC_HLS_START_TIMEOUT_SECONDS:-8.0}
+      NTC_HLS_OUTPUT_ROOT: ${NTC_HLS_OUTPUT_ROOT:-/app/data/hls}
+      NTC_HLS_EDGE_CACHE_ENABLED: ${NTC_HLS_EDGE_CACHE_ENABLED:-1}
+      NTC_HLS_PLAYLIST_EDGE_CACHE_SECONDS: ${NTC_HLS_PLAYLIST_EDGE_CACHE_SECONDS:-0}
+      NTC_HLS_SEGMENT_EDGE_CACHE_SECONDS: ${NTC_HLS_SEGMENT_EDGE_CACHE_SECONDS:-120}
+      NTC_HLS_SNAPSHOT_CACHE_SECONDS: ${NTC_HLS_SNAPSHOT_CACHE_SECONDS:-0.75}
+      NTC_HLS_CLEANUP_INTERVAL_SECONDS: ${NTC_HLS_CLEANUP_INTERVAL_SECONDS:-1.5}
+      NTC_TRANSCRIPTION_HARD_DISABLED: ${NTC_TRANSCRIPTION_HARD_DISABLED:-0}
+      NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND: ${NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND:-0}
+      NTC_TRANSCRIPTION_PROVIDER: ${NTC_TRANSCRIPTION_PROVIDER:-openai}
+      NTC_TRANSCRIPTION_MODEL: ${NTC_TRANSCRIPTION_MODEL:-}
+      NTC_TRANSCRIPTION_CHUNK_SECONDS: ${NTC_TRANSCRIPTION_CHUNK_SECONDS:-8.0}
+      NTC_TRANSCRIPTION_TIMEOUT_SECONDS: ${NTC_TRANSCRIPTION_TIMEOUT_SECONDS:-25.0}
+      NTC_TRANSCRIPTION_MIN_RMS_DB: ${NTC_TRANSCRIPTION_MIN_RMS_DB:--52}
+      NTC_TRANSCRIPTION_PROMPT: ${NTC_TRANSCRIPTION_PROMPT:-Church service, Bible study, prayer meeting, sermon, NTC Newark.}
+      NTC_TRANSCRIPTION_LANGUAGE: ${NTC_TRANSCRIPTION_LANGUAGE:-en}
+      NTC_TRANSCRIPTION_SUPPRESS_REGEX: ${NTC_TRANSCRIPTION_SUPPRESS_REGEX:-^\s*[\[(][^\])]*(music|applause|silence|inaudible|bell|chime|dings?)[^\])]*[\])]\s*$}
+      NTC_TRANSCRIPTION_LOCAL_COMMAND: ${NTC_TRANSCRIPTION_LOCAL_COMMAND:-}
+      NTC_TRANSCRIPTION_LOCAL_URL: ${NTC_TRANSCRIPTION_LOCAL_URL:-}
+      NTC_TRANSLATION_AUDIO_DIR: ${NTC_TRANSLATION_AUDIO_DIR:-/app/data/translation-audio}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      TELNYX_API_KEY: ${TELNYX_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:1967/healthz', timeout=3)); raise SystemExit(0 if data.get('ok') else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  ntc-hls-nginx:
+    image: nginx:1.27-alpine
+    container_name: ntc-hls-nginx
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    ports:
+      - "${NTC_HLS_EDGE_HOST_BIND:-0.0.0.0}:${NTC_HLS_EDGE_PORT:-1968}:8080"
+    volumes:
+      - ./data/hls:/usr/share/nginx/html/hls:ro
+      - ./nginx/ntc-hls-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz | grep -q '\"service\":\"ntc-hls-nginx\"'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  ntc-watchdog:
+    build:
+      context: .
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-watchdog
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    environment:
+      NTC_DB_PATH: ${NTC_DB_PATH:-/app/data/ntccast.db}
+      NTC_WATCHDOG_HEARTBEAT_STALE_SECONDS: ${NTC_WATCHDOG_HEARTBEAT_STALE_SECONDS:-45}
+      NTC_WATCHDOG_STARTUP_GRACE_SECONDS: ${NTC_WATCHDOG_STARTUP_GRACE_SECONDS:-25}
+      NTC_WATCHDOG_HEALTH_URL: ${NTC_WATCHDOG_HEALTH_URL:-http://ntc-webcall:1967/healthz}
+      NTC_WATCHDOG_HEALTH_TIMEOUT_SECONDS: ${NTC_WATCHDOG_HEALTH_TIMEOUT_SECONDS:-8}
+      NTC_WATCHDOG_BASE_URL: ${NTC_WATCHDOG_BASE_URL:-http://ntc-webcall:1967}
+      NTC_WATCHDOG_PUBLIC_PIN: ${NTC_WATCHDOG_PUBLIC_PIN:-7070}
+      NTC_POST_END_SILENCE_GRACE_SECONDS: ${NTC_POST_END_SILENCE_GRACE_SECONDS:-300}
+      NTC_WATCHDOG_CLIENT_TIMEOUT_SECONDS: ${NTC_WATCHDOG_CLIENT_TIMEOUT_SECONDS:-15}
+      NTC_WATCHDOG_HLS_TIMEOUT_SECONDS: ${NTC_WATCHDOG_HLS_TIMEOUT_SECONDS:-30}
+      NTC_LEVEL_MONITOR_ENABLED: ${NTC_LEVEL_MONITOR_ENABLED:-1}
+      NTC_LEVEL_MONITOR_LOW_DB: ${NTC_LEVEL_MONITOR_LOW_DB:--42}
+      NTC_LEVEL_MONITOR_HOT_PEAK_DB: ${NTC_LEVEL_MONITOR_HOT_PEAK_DB:--1}
+      NTC_LEVEL_MONITOR_WINDOW_SECONDS: ${NTC_LEVEL_MONITOR_WINDOW_SECONDS:-300}
+      NTC_LEVEL_MONITOR_MIN_SAMPLES: ${NTC_LEVEL_MONITOR_MIN_SAMPLES:-3}
+      NTC_LEVEL_MONITOR_RETAIN_DAYS: ${NTC_LEVEL_MONITOR_RETAIN_DAYS:-14}
+      NTC_WATCHDOG_REMEDIATION_ENABLED: ${NTC_WATCHDOG_REMEDIATION_ENABLED:-1}
+      NTC_WATCHDOG_RESTART_TARGET: ${NTC_WATCHDOG_RESTART_TARGET:-ntc-webcall}
+      NTC_WATCHDOG_RESTART_COOLDOWN_SECONDS: ${NTC_WATCHDOG_RESTART_COOLDOWN_SECONDS:-900}
+      NTC_WATCHDOG_STATE_PATH: ${NTC_WATCHDOG_STATE_PATH:-/app/data/watchdog-state.json}
+      NTC_WATCHDOG_DOCKER_SOCKET: ${NTC_WATCHDOG_DOCKER_SOCKET:-/var/run/docker.sock}
+      NTC_ALERT_EMAIL_ENABLED: ${NTC_ALERT_EMAIL_ENABLED:-0}
+      NTC_ALERT_EMAIL_TO: ${NTC_ALERT_EMAIL_TO:-}
+      NTC_ALERT_EMAIL_FROM: ${NTC_ALERT_EMAIL_FROM:-}
+      NTC_ALERT_SMTP_HOST: ${NTC_ALERT_SMTP_HOST:-}
+      NTC_ALERT_SMTP_PORT: ${NTC_ALERT_SMTP_PORT:-587}
+      NTC_ALERT_SMTP_USERNAME: ${NTC_ALERT_SMTP_USERNAME:-}
+      NTC_ALERT_SMTP_PASSWORD: ${NTC_ALERT_SMTP_PASSWORD:-}
+      NTC_ALERT_SMTP_STARTTLS: ${NTC_ALERT_SMTP_STARTTLS:-1}
+      NTC_ALERT_SUBJECT_PREFIX: ${NTC_ALERT_SUBJECT_PREFIX:-[NTC]}
+      NTC_ALERT_COOLDOWN_SECONDS: ${NTC_ALERT_COOLDOWN_SECONDS:-900}
+      NTC_ALERT_RESOLVED_ENABLED: ${NTC_ALERT_RESOLVED_ENABLED:-1}
+    volumes:
+      - ./data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          python3 ntc_watchdog.py \
+            --db-path "$${NTC_DB_PATH}" \
+            --heartbeat-stale-seconds "$${NTC_WATCHDOG_HEARTBEAT_STALE_SECONDS}" \
+            --startup-grace-seconds "$${NTC_WATCHDOG_STARTUP_GRACE_SECONDS}" \
+            --base-url "$${NTC_WATCHDOG_BASE_URL}" \
+            --public-pin "$${NTC_WATCHDOG_PUBLIC_PIN}" \
+            --client-timeout-seconds "$${NTC_WATCHDOG_CLIENT_TIMEOUT_SECONDS}" \
+            --hls-timeout-seconds "$${NTC_WATCHDOG_HLS_TIMEOUT_SECONDS}" \
+            --record-incidents \
+            --json || true
+          sleep 60
+        done
+
+  ntc-transcriptor:
+    build:
+      context: .
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-transcriptor
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    ports:
+      - "${NTC_CAPTIONS_HOST_BIND:-0.0.0.0}:${NTC_CAPTIONS_PORT:-6767}:1974"
+    environment:
+      NTC_DB_PATH: ${NTC_DB_PATH:-/app/data/ntccast.db}
+      NTC_ADMIN_PASSWORD: ${NTC_ADMIN_PASSWORD:-change-me}
+      NTC_CAPTIONS_PANEL_PASSWORD: ${NTC_CAPTIONS_PANEL_PASSWORD:-}
+      NTC_CAPTIONS_AUTH_ENABLED: ${NTC_CAPTIONS_AUTH_ENABLED:-1}
+      NTC_CAPTIONS_TITLE: ${NTC_CAPTIONS_TITLE:-The Translator}
+      NTC_CAPTIONS_POLL_MS: ${NTC_CAPTIONS_POLL_MS:-1000}
+      NTC_TRANSLATION_AUDIO_DIR: ${NTC_TRANSLATION_AUDIO_DIR:-/app/data/translation-audio}
+    volumes:
+      - ./data:/app/data
+    command:
+      - gunicorn
+      - -w
+      - "1"
+      - --threads
+      - "4"
+      - -b
+      - 0.0.0.0:1974
+      - ntc_transcriptor_panel:app
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:1974/healthz', timeout=3)); raise SystemExit(0 if data.get('ok') else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  ntc-recordings:
+    build:
+      context: .
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-recordings
+    restart: unless-stopped
+    ports:
+      - "${NTC_RECORDINGS_HOST_BIND:-0.0.0.0}:${NTC_RECORDINGS_PORT:-7777}:1977"
+    environment:
+      NTC_RECORDINGS_DB_PATH: ${NTC_RECORDINGS_DB_PATH:-/app/data/recording-requests.db}
+      NTC_RECORDINGS_LIBRARY_DIRS: ${NTC_RECORDINGS_LIBRARY_DIRS:-message:/mnt/MainRecordings/Recordings/MessageRecordings,worship:/mnt/MainRecordings/Recordings/WorshipRecordings}
+      NTC_RECORDINGS_INDEX_REFRESH_SECONDS: ${NTC_RECORDINGS_INDEX_REFRESH_SECONDS:-300}
+      NTC_RECORDINGS_PANEL_TITLE: ${NTC_RECORDINGS_PANEL_TITLE:-NTC NAS Recordings}
+      NTC_RECORDINGS_PUBLIC_BASE_URL: ${NTC_RECORDINGS_PUBLIC_BASE_URL:-}
+      NTC_RECORDINGS_SHARE_PROVIDER: ${NTC_RECORDINGS_SHARE_PROVIDER:-internal}
+      NTC_RECORDINGS_ADMIN_PASSWORD: ${NTC_RECORDINGS_ADMIN_PASSWORD:-}
+      NTC_ADMIN_PASSWORD: ${NTC_ADMIN_PASSWORD:-change-me}
+      NTC_RECORDINGS_SECRET_KEY: ${NTC_RECORDINGS_SECRET_KEY:-change-me}
+      NTC_NEXTCLOUD_BASE_URL: ${NTC_NEXTCLOUD_BASE_URL:-}
+      NTC_NEXTCLOUD_USERNAME: ${NTC_NEXTCLOUD_USERNAME:-}
+      NTC_NEXTCLOUD_APP_PASSWORD: ${NTC_NEXTCLOUD_APP_PASSWORD:-}
+      NTC_NEXTCLOUD_LOCAL_PATH_PREFIX: ${NTC_NEXTCLOUD_LOCAL_PATH_PREFIX:-/mnt/MainRecordings/Recordings/MessageRecordings}
+      NTC_NEXTCLOUD_PATH_PREFIX: ${NTC_NEXTCLOUD_PATH_PREFIX:-}
+      NTC_NEXTCLOUD_PATH_MAPPINGS: ${NTC_NEXTCLOUD_PATH_MAPPINGS:-/mnt/MainRecordings/Recordings/MessageRecordings=Message Recordings;/mnt/MainRecordings/Recordings/WorshipRecordings=Worship Recordings}
+      NTC_RECORDINGS_EMAIL_ENABLED: ${NTC_RECORDINGS_EMAIL_ENABLED:-0}
+      NTC_RECORDINGS_EMAIL_FROM: ${NTC_RECORDINGS_EMAIL_FROM:-}
+      NTC_RECORDINGS_SMTP_HOST: ${NTC_RECORDINGS_SMTP_HOST:-}
+      NTC_RECORDINGS_SMTP_PORT: ${NTC_RECORDINGS_SMTP_PORT:-587}
+      NTC_RECORDINGS_SMTP_USERNAME: ${NTC_RECORDINGS_SMTP_USERNAME:-}
+      NTC_RECORDINGS_SMTP_PASSWORD: ${NTC_RECORDINGS_SMTP_PASSWORD:-}
+      NTC_RECORDINGS_SMTP_STARTTLS: ${NTC_RECORDINGS_SMTP_STARTTLS:-1}
+      NTC_RECORDINGS_AUTO_ARCHIVE_DAYS: ${NTC_RECORDINGS_AUTO_ARCHIVE_DAYS:-30}
+    volumes:
+      - ./data:/app/data
+      - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:ro
+      - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:ro
+    command:
+      - gunicorn
+      - -w
+      - "1"
+      - --threads
+      - "4"
+      - -b
+      - 0.0.0.0:1977
+      - ntc_recordings_panel:app
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:1977/healthz', timeout=5)); raise SystemExit(0 if data.get('ok') else 1)\""]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 20s
