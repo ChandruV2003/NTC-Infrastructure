@@ -3,7 +3,7 @@ name: ntc
 services:
   ntc-webcall:
     build:
-      context: .
+      context: ../NTC-WebCall
       dockerfile: Dockerfile.ntc
     container_name: ntc-webcall
     restart: unless-stopped
@@ -81,7 +81,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       TELNYX_API_KEY: ${TELNYX_API_KEY:-}
     volumes:
-      - ./data:/app/data
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:1967/healthz', timeout=3)); raise SystemExit(0 if data.get('ok') else 1)\""]
       interval: 30s
@@ -98,7 +98,7 @@ services:
     ports:
       - "${NTC_HLS_EDGE_HOST_BIND:-0.0.0.0}:${NTC_HLS_EDGE_PORT:-1968}:8080"
     volumes:
-      - ./data/hls:/usr/share/nginx/html/hls:ro
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}/hls:/usr/share/nginx/html/hls:ro
       - ./nginx/ntc-hls-nginx.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz | grep -q '\"service\":\"ntc-hls-nginx\"'"]
@@ -109,7 +109,7 @@ services:
 
   ntc-watchdog:
     build:
-      context: .
+      context: ../NTC-WatchDog
       dockerfile: Dockerfile.ntc
     container_name: ntc-watchdog
     restart: unless-stopped
@@ -149,7 +149,7 @@ services:
       NTC_ALERT_COOLDOWN_SECONDS: ${NTC_ALERT_COOLDOWN_SECONDS:-900}
       NTC_ALERT_RESOLVED_ENABLED: ${NTC_ALERT_RESOLVED_ENABLED:-1}
     volumes:
-      - ./data:/app/data
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
       - /var/run/docker.sock:/var/run/docker.sock
     command:
       - sh
@@ -171,7 +171,7 @@ services:
 
   ntc-transcriptor:
     build:
-      context: .
+      context: ../NTC-Transcriptor
       dockerfile: Dockerfile.ntc
     container_name: ntc-transcriptor
     restart: unless-stopped
@@ -188,7 +188,7 @@ services:
       NTC_CAPTIONS_POLL_MS: ${NTC_CAPTIONS_POLL_MS:-1000}
       NTC_TRANSLATION_AUDIO_DIR: ${NTC_TRANSLATION_AUDIO_DIR:-/app/data/translation-audio}
     volumes:
-      - ./data:/app/data
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
     command:
       - gunicorn
       - -w
@@ -207,7 +207,7 @@ services:
 
   ntc-recordings:
     build:
-      context: .
+      context: ../NTC-Recordings
       dockerfile: Dockerfile.ntc
     container_name: ntc-recordings
     restart: unless-stopped
@@ -238,7 +238,7 @@ services:
       NTC_RECORDINGS_SMTP_STARTTLS: ${NTC_RECORDINGS_SMTP_STARTTLS:-1}
       NTC_RECORDINGS_AUTO_ARCHIVE_DAYS: ${NTC_RECORDINGS_AUTO_ARCHIVE_DAYS:-30}
     volumes:
-      - ./data:/app/data
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
       - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:ro
       - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:ro
     command:
