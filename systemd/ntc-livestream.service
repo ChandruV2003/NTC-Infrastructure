@@ -1,0 +1,16 @@
+[Unit]
+Description=NTC LiveStream Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/NTC-LiveStream
+EnvironmentFile=-/root/NTC-LiveStream/.stream.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /root/NTC-LiveStream/stream_server.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

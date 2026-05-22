@@ -1,0 +1,19 @@
+[Unit]
+Description=NTC AutoSyncMix Multitrack Panel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/NTC-AutoSyncMix
+Environment=PYTHONUNBUFFERED=1
+Environment=MULTITRACK_HOST=0.0.0.0
+Environment=MULTITRACK_PORT=8891
+Environment=RAW_ROOT=/mnt/MultitrackRAW/MultitrackFiles
+Environment=RENDER_SCRIPT=/root/NTC-AutoSyncMix/scripts/render_custom_mix_v2.py
+ExecStart=/usr/bin/python3 /root/NTC-AutoSyncMix/scripts/multitrack_app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

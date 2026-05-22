@@ -13,6 +13,8 @@ These services now run from split project directories:
 - `ntc-watchdog`: `/root/NTC-WatchDog`, orchestrated by `/root/NTC-Infrastructure/docker-compose.ntc.yml`
 - `status-monitor`: `/root/NTC-StatusControl/docker-compose.yml`
 - `tascam-control`: `/root/NTC-TascamControl/docker-compose.yml`
+- `ntc-autosyncmix-panel`: `/root/NTC-AutoSyncMix/scripts/multitrack_app.py`, managed by `systemd/ntc-autosyncmix-panel.service`
+- `ntc-livestream`: `/root/NTC-LiveStream/stream_server.py`, managed by `systemd/ntc-livestream.service`
 
 Shared mutable runtime data lives at `/root/NTC-Runtime`.
 
@@ -24,20 +26,22 @@ The old WebCall/status/Tascam paths were archived under `/root/_legacy` after li
 - `/root/WebCallPreview-*`
 - `/root/StatusMonitor-*`
 - `/root/TascamControl-*`
+- `/root/AutoSyncMix-*`
+- `/root/LiveStream-*`
 
-## Not cut over yet
+## AutoSyncMix and LiveStream cutover
 
-These old paths still have live Python processes and should not be renamed in-place:
+AutoSyncMix and LiveStream previously ran as orphaned Python processes from old paths:
 
 - `/root/AutoSyncMix`
 - `/root/LiveStream`
 
-Renamed repos are cloned beside them for comparison and a future planned cutover:
+They now run from renamed project paths:
 
 - `/root/NTC-AutoSyncMix`
 - `/root/NTC-LiveStream`
 
-`NTC-AutoSyncMix` has known live-code drift versus the GitHub repo. Reconcile the live NAS copy before restarting from `/root/NTC-AutoSyncMix`.
+AutoSyncMix live NAS code drift was committed to `NTC-AutoSyncMix` before the cutover. Live environment files remain local and ignored. `/root/.tascam.env` and `/root/NTC-AutoSyncMix/.tascam.env` now point `AUTOMIX_WRAPPER` at `/root/NTC-AutoSyncMix/bin/automix_wrapper.sh`.
 
 ## Naming note
 
