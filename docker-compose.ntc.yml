@@ -169,23 +169,25 @@ services:
           sleep 60
         done
 
-  ntc-transcriptor:
+  ntc-translator:
     build:
-      context: ../NTC-Transcriptor
+      context: ../NTC-Translator
       dockerfile: Dockerfile.ntc
-    container_name: ntc-transcriptor
+    container_name: ntc-translator
     restart: unless-stopped
     depends_on:
       - ntc-webcall
+      - ntc-transcription
     ports:
-      - "${NTC_CAPTIONS_HOST_BIND:-0.0.0.0}:${NTC_CAPTIONS_PORT:-6767}:1974"
+      - "${NTC_TRANSLATOR_HOST_BIND:-0.0.0.0}:${NTC_TRANSLATOR_PORT:-6767}:1974"
     environment:
       NTC_DB_PATH: ${NTC_DB_PATH:-/app/data/ntccast.db}
       NTC_ADMIN_PASSWORD: ${NTC_ADMIN_PASSWORD:-change-me}
-      NTC_CAPTIONS_PANEL_PASSWORD: ${NTC_CAPTIONS_PANEL_PASSWORD:-}
-      NTC_CAPTIONS_AUTH_ENABLED: ${NTC_CAPTIONS_AUTH_ENABLED:-1}
-      NTC_CAPTIONS_TITLE: ${NTC_CAPTIONS_TITLE:-The Translator}
-      NTC_CAPTIONS_POLL_MS: ${NTC_CAPTIONS_POLL_MS:-1000}
+      NTC_TRANSLATOR_PANEL_PASSWORD: ${NTC_TRANSLATOR_PANEL_PASSWORD:-}
+      NTC_TRANSLATOR_AUTH_ENABLED: ${NTC_TRANSLATOR_AUTH_ENABLED:-1}
+      NTC_TRANSLATOR_TITLE: ${NTC_TRANSLATOR_TITLE:-The Translator}
+      NTC_TRANSLATOR_POLL_MS: ${NTC_TRANSLATOR_POLL_MS:-1000}
+      NTC_TRANSCRIPTION_BASE_URL: ${NTC_TRANSCRIPTION_BASE_URL:-http://ntc-transcription:1975}
       NTC_TRANSLATION_AUDIO_DIR: ${NTC_TRANSLATION_AUDIO_DIR:-/app/data/translation-audio}
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
@@ -197,7 +199,7 @@ services:
       - "4"
       - -b
       - 0.0.0.0:1974
-      - ntc_transcriptor_panel:app
+      - ntc_translator_panel:app
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:1974/healthz', timeout=3)); raise SystemExit(0 if data.get('ok') else 1)\""]
       interval: 30s
@@ -205,25 +207,25 @@ services:
       retries: 3
       start_period: 15s
 
-  ntc-live-captions:
+  ntc-transcription:
     build:
-      context: ../NTC-LiveCaptions
+      context: ../NTC-Transcription
       dockerfile: Dockerfile.ntc
-    container_name: ntc-live-captions
+    container_name: ntc-transcription
     restart: unless-stopped
     depends_on:
       - ntc-webcall
     ports:
-      - "${NTC_LIVE_CAPTIONS_HOST_BIND:-0.0.0.0}:${NTC_LIVE_CAPTIONS_PORT:-6768}:1975"
+      - "${NTC_TRANSCRIPTION_HOST_BIND:-0.0.0.0}:${NTC_TRANSCRIPTION_PORT:-6768}:1975"
     environment:
       NTC_DB_PATH: ${NTC_DB_PATH:-/app/data/ntccast.db}
-      NTC_LIVE_CAPTIONS_TITLE: ${NTC_LIVE_CAPTIONS_TITLE:-NTC Live Captions}
-      NTC_LIVE_CAPTIONS_DEFAULT_ROOM: ${NTC_LIVE_CAPTIONS_DEFAULT_ROOM:-room-a}
-      NTC_LIVE_CAPTIONS_VISIBLE_ROOMS: ${NTC_LIVE_CAPTIONS_VISIBLE_ROOMS:-room-a,room-b}
-      NTC_LIVE_CAPTIONS_POLL_MS: ${NTC_LIVE_CAPTIONS_POLL_MS:-1000}
-      NTC_LIVE_CAPTIONS_INITIAL_LINES: ${NTC_LIVE_CAPTIONS_INITIAL_LINES:-30}
-      NTC_LIVE_CAPTIONS_API_LINES: ${NTC_LIVE_CAPTIONS_API_LINES:-80}
-      NTC_LIVE_CAPTIONS_RENDER_LINES: ${NTC_LIVE_CAPTIONS_RENDER_LINES:-18}
+      NTC_TRANSCRIPTION_TITLE: ${NTC_TRANSCRIPTION_TITLE:-NTC Transcription}
+      NTC_TRANSCRIPTION_DEFAULT_ROOM: ${NTC_TRANSCRIPTION_DEFAULT_ROOM:-room-a}
+      NTC_TRANSCRIPTION_VISIBLE_ROOMS: ${NTC_TRANSCRIPTION_VISIBLE_ROOMS:-room-a,room-b}
+      NTC_TRANSCRIPTION_POLL_MS: ${NTC_TRANSCRIPTION_POLL_MS:-1000}
+      NTC_TRANSCRIPTION_INITIAL_LINES: ${NTC_TRANSCRIPTION_INITIAL_LINES:-30}
+      NTC_TRANSCRIPTION_API_LINES: ${NTC_TRANSCRIPTION_API_LINES:-80}
+      NTC_TRANSCRIPTION_RENDER_LINES: ${NTC_TRANSCRIPTION_RENDER_LINES:-18}
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
     healthcheck:
