@@ -225,7 +225,7 @@ services:
       NTC_LIVE_CAPTIONS_API_LINES: ${NTC_LIVE_CAPTIONS_API_LINES:-80}
       NTC_LIVE_CAPTIONS_RENDER_LINES: ${NTC_LIVE_CAPTIONS_RENDER_LINES:-18}
     volumes:
-      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data:ro
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:1975/healthz', timeout=3)); raise SystemExit(0 if data.get('ok') else 1)\""]
       interval: 30s
