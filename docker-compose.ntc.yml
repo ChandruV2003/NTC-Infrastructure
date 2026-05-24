@@ -205,6 +205,34 @@ services:
       retries: 3
       start_period: 15s
 
+  ntc-live-captions:
+    build:
+      context: ../NTC-LiveCaptions
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-live-captions
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    ports:
+      - "${NTC_LIVE_CAPTIONS_HOST_BIND:-0.0.0.0}:${NTC_LIVE_CAPTIONS_PORT:-6768}:1975"
+    environment:
+      NTC_DB_PATH: ${NTC_DB_PATH:-/app/data/ntccast.db}
+      NTC_LIVE_CAPTIONS_TITLE: ${NTC_LIVE_CAPTIONS_TITLE:-NTC Live Captions}
+      NTC_LIVE_CAPTIONS_DEFAULT_ROOM: ${NTC_LIVE_CAPTIONS_DEFAULT_ROOM:-room-a}
+      NTC_LIVE_CAPTIONS_VISIBLE_ROOMS: ${NTC_LIVE_CAPTIONS_VISIBLE_ROOMS:-room-a,room-b}
+      NTC_LIVE_CAPTIONS_POLL_MS: ${NTC_LIVE_CAPTIONS_POLL_MS:-1000}
+      NTC_LIVE_CAPTIONS_INITIAL_LINES: ${NTC_LIVE_CAPTIONS_INITIAL_LINES:-30}
+      NTC_LIVE_CAPTIONS_API_LINES: ${NTC_LIVE_CAPTIONS_API_LINES:-80}
+      NTC_LIVE_CAPTIONS_RENDER_LINES: ${NTC_LIVE_CAPTIONS_RENDER_LINES:-18}
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data:ro
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:1975/healthz', timeout=3)); raise SystemExit(0 if data.get('ok') else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
   ntc-recordings:
     build:
       context: ../NTC-Recordings
