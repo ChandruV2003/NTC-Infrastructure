@@ -217,7 +217,7 @@ python3 tools/local_transcription_server.py --host 0.0.0.0 --port 8765
 
 ```env
 NTC_TRANSCRIPTION_PROVIDER=local_http
-NTC_TRANSCRIPTION_LOCAL_URL=http://<mac-mini-tailscale-ip>:8765/transcribe
+NTC_TRANSCRIPTION_LOCAL_URL=http://<mac-mini-tailscale-ip>:8765/transcription
 NTC_TRANSCRIPTION_TIMEOUT_SECONDS=25
 ```
 
@@ -230,7 +230,7 @@ Replay a saved recording through the same local transcription handoff without to
 ```bash
 python3 scripts/replay_transcription_sample.py \
   --provider local_http \
-  --local-url http://<mac-mini-tailscale-ip>:8765/transcribe \
+  --local-url http://<mac-mini-tailscale-ip>:8765/transcription \
   --room room-a \
   --limit-seconds 60 \
   data/diagnostic-audio/hearing-example.wav
