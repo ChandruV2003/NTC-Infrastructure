@@ -208,20 +208,24 @@ NTC_TRANSCRIPTION_LOCAL_COMMAND=whisper-cli -m /app/data/models/ggml-base.en.bin
 NTC_TRANSCRIPTION_TIMEOUT_SECONDS=25
 ```
 
-For offloading transcription to an M4 Mac mini, run the included local bridge on the Mac and point the NAS at it:
+For offloading transcription to the M4 Mac mini, run the Whisper large bridge on the M4 and point the NAS at it. Production should use the M4 endpoint, not the Debian Mac mini:
 
 ```bash
-NTC_LOCAL_TRANSCRIPTION_COMMAND="/opt/homebrew/bin/whisper-cli -m /Users/chandruv/models/ggml-base.en.bin -f {audio} -l en -nt -np" \
-python3 tools/local_transcription_server.py --host 0.0.0.0 --port 8765
+python3 tools/whisper_large_server.py \
+  --host 0.0.0.0 \
+  --port 8766 \
+  --model openai/whisper-large-v3 \
+  --device cpu \
+  --quiet
 ```
 
 ```env
 NTC_TRANSCRIPTION_PROVIDER=local_http
-NTC_TRANSCRIPTION_LOCAL_URL=http://<mac-mini-tailscale-ip>:8765/transcription
-NTC_TRANSCRIPTION_TIMEOUT_SECONDS=25
+NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+NTC_TRANSCRIPTION_TIMEOUT_SECONDS=45
 ```
 
-Current production intent: use `local_http` for live transcription so the NAS only prepares chunks and stores transcript rows. The local bridge can run `whisper-cli` on the M4 Mac mini, or it can run another command such as `tools/vosk_transcribe_file.py` if a Vosk model is installed there. Vosk should not be interpreted as "running inside WebCall" unless `NTC_TRANSCRIPTION_PROVIDER=local_cmd` and `NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND=1` are explicitly set.
+Current production intent: use `local_http` for live transcription so the NAS only prepares chunks and stores transcript rows. The M4 Mac mini owns Whisper large-v3 transcription. The Debian Mac mini is a development/control host and should not run the live transcription workload.
 
 `NTC_TRANSCRIPTION_TIMEOUT_SECONDS` controls how long a single local transcription call may take. If the local command is too slow for the configured chunk size, captions will lag behind the meeting. `NTC_TRANSCRIPTION_MIN_RMS_DB` skips quiet chunks before they reach the transcriber. `NTC_TRANSCRIPTION_SUPPRESS_REGEX` skips final text that only describes non-speech audio, such as `(upbeat music)`.
 
@@ -230,7 +234,7 @@ Replay a saved recording through the same local transcription handoff without to
 ```bash
 python3 scripts/replay_transcription_sample.py \
   --provider local_http \
-  --local-url http://<mac-mini-tailscale-ip>:8765/transcription \
+  --local-url http://100.66.210.59:8766/transcription \
   --room room-a \
   --limit-seconds 60 \
   data/diagnostic-audio/hearing-example.wav
@@ -361,5 +365,5 @@ These points came from the first Sunday production run and should be treated as 
 - Device-selection events must include the configured order, available devices, remembered devices, current device, desired-active state, and ingest state. If the mixer disappears again, the event should show exactly why the fallback was selected.
 - Telnyx stream stats should be useful, not noisy. Persist periodic stream stats and abnormal stats, especially fallback percentage, buffer milliseconds, late-send milliseconds, source level, source device, and source format.
 - Runtime temp cleanup must be visible. Startup cleanup of orphaned HLS/transcription temp folders logs how many directories and bytes were removed, so a repeat disk-growth issue is obvious.
-- Transcription is experimental and should not compete with WebCall during production. If transcription is enabled, prefer `local_http` offload to the M4 Mac mini or another dedicated worker instead of running heavy local inference inside the WebCall container.
+- Transcription should not compete with WebCall during production. If transcription is enabled, use `local_http` offload to the M4 Mac mini instead of running heavy local inference inside the WebCall container or on the Debian Mac mini.
 - When reviewing CPU, remember Docker CPU percent is per logical CPU thread. A container showing 250% means roughly 2.5 cores, not 250% of the NAS.
