@@ -268,7 +268,7 @@ services:
       - "${NTC_RECORDINGS_HOST_BIND:-0.0.0.0}:${NTC_RECORDINGS_PORT:-7777}:1977"
     environment:
       NTC_RECORDINGS_DB_PATH: ${NTC_RECORDINGS_DB_PATH:-/app/data/recording-requests.db}
-      NTC_RECORDINGS_LIBRARY_DIRS: ${NTC_RECORDINGS_LIBRARY_DIRS:-message:/mnt/MainRecordings/Recordings/MessageRecordings,worship:/mnt/MainRecordings/Recordings/WorshipRecordings}
+      NTC_RECORDINGS_LIBRARY_DIRS: ${NTC_RECORDINGS_LIBRARY_DIRS:-message:/mnt/MainRecordings/Recordings/MessageRecordings,worship:/mnt/MainRecordings/Recordings/WorshipRecordings,testimony:/mnt/MainRecordings/Recordings/TestimonyRecordings,unsure:/mnt/MainRecordings/Recordings/BabyDedicationRecordings}
       NTC_RECORDINGS_INDEX_REFRESH_SECONDS: ${NTC_RECORDINGS_INDEX_REFRESH_SECONDS:-300}
       NTC_RECORDINGS_PANEL_TITLE: ${NTC_RECORDINGS_PANEL_TITLE:-NTC NAS Recordings}
       NTC_RECORDINGS_PUBLIC_BASE_URL: ${NTC_RECORDINGS_PUBLIC_BASE_URL:-}
@@ -281,7 +281,7 @@ services:
       NTC_NEXTCLOUD_APP_PASSWORD: ${NTC_NEXTCLOUD_APP_PASSWORD:-}
       NTC_NEXTCLOUD_LOCAL_PATH_PREFIX: ${NTC_NEXTCLOUD_LOCAL_PATH_PREFIX:-/mnt/MainRecordings/Recordings/MessageRecordings}
       NTC_NEXTCLOUD_PATH_PREFIX: ${NTC_NEXTCLOUD_PATH_PREFIX:-}
-      NTC_NEXTCLOUD_PATH_MAPPINGS: ${NTC_NEXTCLOUD_PATH_MAPPINGS:-/mnt/MainRecordings/Recordings/MessageRecordings=Message Recordings;/mnt/MainRecordings/Recordings/WorshipRecordings=Worship Recordings}
+      NTC_NEXTCLOUD_PATH_MAPPINGS: ${NTC_NEXTCLOUD_PATH_MAPPINGS:-/mnt/MainRecordings/Recordings/MessageRecordings=Message Recordings;/mnt/MainRecordings/Recordings/WorshipRecordings=Worship Recordings;/mnt/MainRecordings/Recordings/TestimonyRecordings=Testimony Recordings;/mnt/MainRecordings/Recordings/BabyDedicationRecordings=Baby Dedication Recordings}
       NTC_RECORDINGS_EMAIL_ENABLED: ${NTC_RECORDINGS_EMAIL_ENABLED:-0}
       NTC_RECORDINGS_EMAIL_FROM: ${NTC_RECORDINGS_EMAIL_FROM:-}
       NTC_RECORDINGS_SMTP_HOST: ${NTC_RECORDINGS_SMTP_HOST:-}
@@ -292,8 +292,10 @@ services:
       NTC_RECORDINGS_AUTO_ARCHIVE_DAYS: ${NTC_RECORDINGS_AUTO_ARCHIVE_DAYS:-30}
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
-      - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:ro
+      - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:rw
       - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:ro
+      - /mnt/MainRecordings/Recordings/TestimonyRecordings:/mnt/MainRecordings/Recordings/TestimonyRecordings:rw
+      - /mnt/MainRecordings/Recordings/BabyDedicationRecordings:/mnt/MainRecordings/Recordings/BabyDedicationRecordings:rw
     command:
       - gunicorn
       - -w
