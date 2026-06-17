@@ -20,4 +20,5 @@ Secrets, live `.env` files, SQLite databases, prompt audio, and generated HLS/ru
 - `ntc-watchdog`
 - `ntc-status`
 - `ntc-autosync-mix`
-- `ntc-tascam-control`
+- `ntc-tascam-da6400-control`
+- `ntc-denon-dn700r-control`

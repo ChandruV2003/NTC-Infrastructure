@@ -1,6 +1,6 @@
 # NTC NAS Project Migration Status
 
-Last updated: 2026-05-22.
+Last updated: 2026-06-17.
 
 ## Live split services
 
@@ -12,7 +12,8 @@ These services now run from split project directories:
 - `ntc-transcriptor`: `/root/NTC-Transcriptor`, orchestrated by `/root/NTC-Infrastructure/docker-compose.ntc.yml`
 - `ntc-watchdog`: `/root/NTC-WatchDog`, orchestrated by `/root/NTC-Infrastructure/docker-compose.ntc.yml`
 - `status-monitor`: `/root/NTC-StatusControl/docker-compose.yml`
-- `tascam-control`: `/root/NTC-TascamControl/docker-compose.yml`
+- `tascam-control`: `/root/NTC-TascamDA6400Control/docker-compose.yml`
+- `denon-dn700r-control`: `/root/NTC-DenonDN700RControl/docker-compose.yml`
 - `ntc-autosyncmix-panel`: `/root/NTC-AutoSyncMix/scripts/multitrack_app.py`, managed by `systemd/ntc-autosyncmix-panel.service`
 - `ntc-livestream`: `/root/NTC-LiveStream/stream_server.py`, managed by `systemd/ntc-livestream.service`
 
@@ -50,3 +51,7 @@ The only remaining `roomcast` string after migration is the live Nextcloud accou
 - `NTC_NEXTCLOUD_USERNAME=roomcast-recordings`
 
 That is a real external account/config value and should only be renamed after the corresponding Nextcloud account is created or changed.
+
+## Recorder control naming
+
+`/root/NTC-TascamControl` is retained as a compatibility symlink to `/root/NTC-TascamDA6400Control`. The live DA-6400 container name remains `tascam-control` so dependent status checks and links do not break.
