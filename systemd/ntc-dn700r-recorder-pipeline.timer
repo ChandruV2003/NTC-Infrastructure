@@ -1,0 +1,10 @@
+[Unit]
+Description=Run NTC DN700R recorder ingest pipeline every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=5s
+Unit=ntc-dn700r-recorder-pipeline.service
+
+[Install]
+WantedBy=timers.target

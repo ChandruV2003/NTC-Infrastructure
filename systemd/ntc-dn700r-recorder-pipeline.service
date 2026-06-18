@@ -1,0 +1,13 @@
+[Unit]
+Description=NTC DN700R recorder ingest pipeline
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/NTC-AutoSyncMix
+Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+Environment=CLASSIFY_LIMIT=20
+Environment=RUN_MATCH_EXISTING=0
+ExecStart=/root/NTC-AutoSyncMix/scripts/recorders/run_DN700R_pipeline.sh
+Nice=5
