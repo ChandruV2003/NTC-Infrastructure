@@ -56,6 +56,7 @@ services:
       NTC_TELNYX_DEBUG_TAP_MAX_SECONDS: ${NTC_TELNYX_DEBUG_TAP_MAX_SECONDS:-300}
       NTC_TELNYX_SMS_LOG_PATH: ${NTC_TELNYX_SMS_LOG_PATH:-/app/data/telnyx-sms-webhooks.jsonl}
       NTC_HLS_PLAYLIST_LENGTH: ${NTC_HLS_PLAYLIST_LENGTH:-30}
+      NTC_HLS_ENABLED: ${NTC_HLS_ENABLED:-1}
       NTC_HLS_DELETE_THRESHOLD: ${NTC_HLS_DELETE_THRESHOLD:-180}
       NTC_HLS_AUDIO_BITRATE: ${NTC_HLS_AUDIO_BITRATE:-256k}
       NTC_HLS_START_TIMEOUT_SECONDS: ${NTC_HLS_START_TIMEOUT_SECONDS:-8.0}
@@ -65,13 +66,17 @@ services:
       NTC_HLS_SEGMENT_EDGE_CACHE_SECONDS: ${NTC_HLS_SEGMENT_EDGE_CACHE_SECONDS:-120}
       NTC_HLS_SNAPSHOT_CACHE_SECONDS: ${NTC_HLS_SNAPSHOT_CACHE_SECONDS:-0.75}
       NTC_HLS_CLEANUP_INTERVAL_SECONDS: ${NTC_HLS_CLEANUP_INTERVAL_SECONDS:-1.5}
+      NTC_SHARED_PCM_ENABLED: ${NTC_SHARED_PCM_ENABLED:-0}
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_SHARED_PCM_RING_CHUNKS: ${NTC_SHARED_PCM_RING_CHUNKS:-240}
       NTC_TRANSCRIPTION_HARD_DISABLED: ${NTC_TRANSCRIPTION_HARD_DISABLED:-0}
+      NTC_TRANSCRIPTION_AUDIO_SOURCE: ${NTC_TRANSCRIPTION_AUDIO_SOURCE:-dante}
       NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND: ${NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND:-0}
       NTC_TRANSCRIPTION_PROVIDER: ${NTC_TRANSCRIPTION_PROVIDER:-openai}
       NTC_TRANSCRIPTION_MODEL: ${NTC_TRANSCRIPTION_MODEL:-}
-      NTC_TRANSCRIPTION_CHUNK_SECONDS: ${NTC_TRANSCRIPTION_CHUNK_SECONDS:-8.0}
-      NTC_TRANSCRIPTION_MIN_CHUNK_SECONDS: ${NTC_TRANSCRIPTION_MIN_CHUNK_SECONDS:-5.0}
-      NTC_TRANSCRIPTION_MAX_CHUNK_SECONDS: ${NTC_TRANSCRIPTION_MAX_CHUNK_SECONDS:-14.0}
+      NTC_TRANSCRIPTION_CHUNK_SECONDS: ${NTC_TRANSCRIPTION_CHUNK_SECONDS:-6.0}
+      NTC_TRANSCRIPTION_MIN_CHUNK_SECONDS: ${NTC_TRANSCRIPTION_MIN_CHUNK_SECONDS:-3.5}
+      NTC_TRANSCRIPTION_MAX_CHUNK_SECONDS: ${NTC_TRANSCRIPTION_MAX_CHUNK_SECONDS:-10.0}
       NTC_TRANSCRIPTION_CHUNK_OVERLAP_SECONDS: ${NTC_TRANSCRIPTION_CHUNK_OVERLAP_SECONDS:-0.75}
       NTC_TRANSCRIPTION_QUEUE_SECONDS: ${NTC_TRANSCRIPTION_QUEUE_SECONDS:-120.0}
       NTC_TRANSCRIPTION_VAD_ENABLED: ${NTC_TRANSCRIPTION_VAD_ENABLED:-1}
@@ -98,6 +103,74 @@ services:
       retries: 3
       start_period: 20s
 
+  ntc-dante:
+    profiles:
+      - dante
+    build:
+      context: ../NTC-Dante
+      dockerfile: Dockerfile.ntc
+    image: ntc-dante:latest
+    container_name: ntc-dante
+    mac_address: ${NTC_DANTE_MAC_ADDRESS:-02:42:c0:a8:0a:e6}
+    restart: unless-stopped
+    stop_grace_period: 15s
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      rtprio: 95
+      memlock: -1
+    networks:
+      ntc-dante-lan:
+        ipv4_address: ${NTC_DANTE_IPV4_ADDRESS:-192.168.10.230}
+    depends_on:
+      - ntc-webcall
+    environment:
+      NTC_DANTE_WEBCALL_BASE_URL: ${NTC_DANTE_WEBCALL_BASE_URL:-http://192.168.1.212:1967}
+      NTC_DANTE_HOST_SLUG: ${NTC_DANTE_HOST_SLUG:-ntc-dante}
+      NTC_DANTE_TOKEN: ${NTC_DANTE_TOKEN:-}
+      NTC_DANTE_EXPOSE_ONLY: ${NTC_DANTE_EXPOSE_ONLY:-0}
+      NTC_DANTE_SPLIT_WEBCALL: ${NTC_DANTE_SPLIT_WEBCALL:-0}
+      NTC_DANTE_TRANSCRIPTION_INGEST_ENABLED: ${NTC_DANTE_TRANSCRIPTION_INGEST_ENABLED:-1}
+      NTC_DANTE_ROOM_A_HOST_SLUG: ${NTC_DANTE_ROOM_A_HOST_SLUG:-ntc-dante-room-a}
+      NTC_DANTE_ROOM_A_TOKEN: ${NTC_DANTE_ROOM_A_TOKEN:-}
+      NTC_DANTE_ROOM_A_DEVICE_NAME: ${NTC_DANTE_ROOM_A_DEVICE_NAME:-NTC Dante Room A}
+      NTC_DANTE_ROOM_A_CHANNELS: ${NTC_DANTE_ROOM_A_CHANNELS:-1,2}
+      NTC_DANTE_ROOM_A_AES67_SDP: ${NTC_DANTE_ROOM_A_AES67_SDP:-/app/data/aes67/room-a.sdp}
+      NTC_DANTE_ROOM_B_HOST_SLUG: ${NTC_DANTE_ROOM_B_HOST_SLUG:-ntc-dante-room-b}
+      NTC_DANTE_ROOM_B_TOKEN: ${NTC_DANTE_ROOM_B_TOKEN:-}
+      NTC_DANTE_ROOM_B_DEVICE_NAME: ${NTC_DANTE_ROOM_B_DEVICE_NAME:-NTC Dante Room B}
+      NTC_DANTE_ROOM_B_CHANNELS: ${NTC_DANTE_ROOM_B_CHANNELS:-3,4}
+      NTC_DANTE_ROOM_B_AES67_SDP: ${NTC_DANTE_ROOM_B_AES67_SDP:-/app/data/aes67/room-b.sdp}
+      NTC_DANTE_MODE: ${NTC_DANTE_MODE:-inferno}
+      NTC_DANTE_INTERFACE: ${NTC_DANTE_INTERFACE:-192.168.10.230}
+      NTC_DANTE_DEVICE_NAME: ${NTC_DANTE_DEVICE_NAME:-NTC Dante 4ch (192.168.10.230)}
+      NTC_DANTE_CHANNELS: ${NTC_DANTE_CHANNELS:-4}
+      NTC_DANTE_SAMPLE_RATE: ${NTC_DANTE_SAMPLE_RATE:-48000}
+      NTC_DANTE_AES67_SDP: ${NTC_DANTE_AES67_SDP:-}
+      INFERNO_BIND_IP: ${INFERNO_BIND_IP:-192.168.10.230}
+      INFERNO_CLOCK_PATH: ${INFERNO_CLOCK_PATH:-/dev/ptp0}
+      INFERNO_NAME: ${INFERNO_NAME:-NTC-Dante}
+      INFERNO_RX_LATENCY_NS: ${INFERNO_RX_LATENCY_NS:-10000000}
+      RUST_LOG: ${NTC_DANTE_RUST_LOG:-info}
+      RUST_BACKTRACE: ${NTC_DANTE_RUST_BACKTRACE:-1}
+    devices:
+      - ${NTC_DANTE_CLOCK_DEVICE:-/dev/ptp0}:/dev/ptp0
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}/dante:/app/data
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}/dante/inferno-state:/root/.local/state/inferno_aoip
+    healthcheck:
+      test: ["CMD", "python3", "/app/ntc_dante_healthcheck.py"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
   ntc-hls-nginx:
     image: nginx:1.27-alpine
     container_name: ntc-hls-nginx
@@ -115,6 +188,76 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  ntc-webcall-hls:
+    profiles:
+      - webcall-split
+    build:
+      context: ../NTC-WebCall
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-webcall-hls
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    environment:
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_WEBCALL_WORKER_ROOMS: ${NTC_WEBCALL_WORKER_ROOMS:-room-a,room-b}
+      NTC_WEBCALL_WORKER_STATUS_ROOT: ${NTC_WEBCALL_WORKER_STATUS_ROOT:-/app/data/webcall-workers}
+      NTC_HLS_OUTPUT_ROOT: ${NTC_HLS_OUTPUT_ROOT:-/app/data/hls}
+      NTC_HLS_AUDIO_BITRATE: ${NTC_HLS_AUDIO_BITRATE:-256k}
+      NTC_HLS_SEGMENT_SECONDS: ${NTC_HLS_SEGMENT_SECONDS:-1.0}
+      NTC_HLS_PLAYLIST_LENGTH: ${NTC_HLS_PLAYLIST_LENGTH:-30}
+      NTC_HLS_DELETE_THRESHOLD: ${NTC_HLS_DELETE_THRESHOLD:-180}
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
+    command: ["python3", "ntc_webcall_worker.py", "hls"]
+
+  ntc-webcall-telnyx:
+    profiles:
+      - webcall-split
+    build:
+      context: ../NTC-WebCall
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-webcall-telnyx
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      rtprio: 80
+      memlock: -1
+    environment:
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_WEBCALL_WORKER_ROOMS: ${NTC_WEBCALL_WORKER_ROOMS:-room-a,room-b}
+      NTC_WEBCALL_WORKER_STATUS_ROOT: ${NTC_WEBCALL_WORKER_STATUS_ROOT:-/app/data/webcall-workers}
+      NTC_TELNYX_STREAM_FRAME_MS: ${NTC_TELNYX_STREAM_FRAME_MS:-100}
+      NTC_TELEPHONY_MONO_MIX: ${NTC_TELEPHONY_MONO_MIX:-left}
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
+    command: ["python3", "ntc_webcall_worker.py", "telnyx"]
+
+  ntc-webcall-dsp:
+    profiles:
+      - webcall-split
+    build:
+      context: ../NTC-WebCall
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-webcall-dsp
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    environment:
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_DSP_SHARED_PCM_ROOT: ${NTC_DSP_SHARED_PCM_ROOT:-/app/data/shared-pcm-dsp}
+      NTC_WEBCALL_WORKER_ROOMS: ${NTC_WEBCALL_WORKER_ROOMS:-room-a,room-b}
+      NTC_WEBCALL_WORKER_STATUS_ROOT: ${NTC_WEBCALL_WORKER_STATUS_ROOT:-/app/data/webcall-workers}
+      NTC_DSP_GAIN_DB: ${NTC_DSP_GAIN_DB:-0}
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
+    command: ["python3", "ntc_webcall_worker.py", "dsp"]
 
   ntc-watchdog:
     build:
@@ -198,6 +341,15 @@ services:
       NTC_TRANSLATOR_POLL_MS: ${NTC_TRANSLATOR_POLL_MS:-1000}
       NTC_TRANSCRIPTION_BASE_URL: ${NTC_TRANSCRIPTION_BASE_URL:-http://ntc-transcription:1975}
       NTC_TRANSLATION_AUDIO_DIR: ${NTC_TRANSLATION_AUDIO_DIR:-/app/data/translation-audio}
+      NTC_TRANSLATION_WORKER_ENABLED: ${NTC_TRANSLATION_WORKER_ENABLED:-0}
+      NTC_TRANSLATION_TTS_URL: ${NTC_TRANSLATION_TTS_URL:-}
+      NTC_TRANSLATION_TTS_TOKEN: ${NTC_TRANSLATION_TTS_TOKEN:-}
+      NTC_TRANSLATION_WORKER_POLL_SECONDS: ${NTC_TRANSLATION_WORKER_POLL_SECONDS:-1.0}
+      NTC_TRANSLATION_WORKER_REQUEST_TIMEOUT_SECONDS: ${NTC_TRANSLATION_WORKER_REQUEST_TIMEOUT_SECONDS:-180.0}
+      NTC_TRANSLATION_WORKER_BATCH_LIMIT: ${NTC_TRANSLATION_WORKER_BATCH_LIMIT:-2}
+      NTC_TRANSLATION_WORKER_MAX_CHARS: ${NTC_TRANSLATION_WORKER_MAX_CHARS:-700}
+      NTC_TRANSLATION_WORKER_BACKOFF_SECONDS: ${NTC_TRANSLATION_WORKER_BACKOFF_SECONDS:-15.0}
+      NTC_TRANSLATION_WORKER_MAX_BACKOFF_SECONDS: ${NTC_TRANSLATION_WORKER_MAX_BACKOFF_SECONDS:-120.0}
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
     command:
@@ -231,10 +383,12 @@ services:
       NTC_TRANSCRIPTION_TITLE: ${NTC_TRANSCRIPTION_TITLE:-NTC Transcription}
       NTC_TRANSCRIPTION_DEFAULT_ROOM: ${NTC_TRANSCRIPTION_DEFAULT_ROOM:-room-a}
       NTC_TRANSCRIPTION_VISIBLE_ROOMS: ${NTC_TRANSCRIPTION_VISIBLE_ROOMS:-room-a,room-b}
-      NTC_TRANSCRIPTION_POLL_MS: ${NTC_TRANSCRIPTION_POLL_MS:-1000}
+      NTC_TRANSCRIPTION_POLL_MS: ${NTC_TRANSCRIPTION_POLL_MS:-500}
       NTC_TRANSCRIPTION_INITIAL_LINES: ${NTC_TRANSCRIPTION_INITIAL_LINES:-30}
       NTC_TRANSCRIPTION_API_LINES: ${NTC_TRANSCRIPTION_API_LINES:-80}
       NTC_TRANSCRIPTION_RENDER_LINES: ${NTC_TRANSCRIPTION_RENDER_LINES:-18}
+      NTC_TRANSCRIPTION_WORD_DELAY_MS: ${NTC_TRANSCRIPTION_WORD_DELAY_MS:-64}
+      NTC_TRANSCRIPTION_WORD_DELAY_CAP_MS: ${NTC_TRANSCRIPTION_WORD_DELAY_CAP_MS:-2400}
       NTC_ADMIN_PASSWORD: ${NTC_ADMIN_PASSWORD:-change-me}
       NTC_TRANSCRIPTION_SETTINGS_PASSWORD: ${NTC_TRANSCRIPTION_SETTINGS_PASSWORD:-}
       NTC_TRANSCRIPTION_SETTINGS_AUTH_ENABLED: ${NTC_TRANSCRIPTION_SETTINGS_AUTH_ENABLED:-1}
@@ -257,7 +411,7 @@ services:
       - "${NTC_RECORDINGS_HOST_BIND:-0.0.0.0}:${NTC_RECORDINGS_PORT:-7777}:1977"
     environment:
       NTC_RECORDINGS_DB_PATH: ${NTC_RECORDINGS_DB_PATH:-/app/data/recording-requests.db}
-      NTC_RECORDINGS_LIBRARY_DIRS: ${NTC_RECORDINGS_LIBRARY_DIRS:-message:/mnt/MainRecordings/Recordings/MessageRecordings,worship:/mnt/MainRecordings/Recordings/WorshipRecordings}
+      NTC_RECORDINGS_LIBRARY_DIRS: ${NTC_RECORDINGS_LIBRARY_DIRS:-message:/mnt/MainRecordings/Recordings/MessageRecordings,worship:/mnt/MainRecordings/Recordings/WorshipRecordings,testimony:/mnt/MainRecordings/Recordings/TestimonyRecordings,unsure:/mnt/MainRecordings/Recordings/BabyDedicationRecordings}
       NTC_RECORDINGS_INDEX_REFRESH_SECONDS: ${NTC_RECORDINGS_INDEX_REFRESH_SECONDS:-300}
       NTC_RECORDINGS_PANEL_TITLE: ${NTC_RECORDINGS_PANEL_TITLE:-NTC NAS Recordings}
       NTC_RECORDINGS_PUBLIC_BASE_URL: ${NTC_RECORDINGS_PUBLIC_BASE_URL:-}
@@ -270,7 +424,7 @@ services:
       NTC_NEXTCLOUD_APP_PASSWORD: ${NTC_NEXTCLOUD_APP_PASSWORD:-}
       NTC_NEXTCLOUD_LOCAL_PATH_PREFIX: ${NTC_NEXTCLOUD_LOCAL_PATH_PREFIX:-/mnt/MainRecordings/Recordings/MessageRecordings}
       NTC_NEXTCLOUD_PATH_PREFIX: ${NTC_NEXTCLOUD_PATH_PREFIX:-}
-      NTC_NEXTCLOUD_PATH_MAPPINGS: ${NTC_NEXTCLOUD_PATH_MAPPINGS:-/mnt/MainRecordings/Recordings/MessageRecordings=Message Recordings;/mnt/MainRecordings/Recordings/WorshipRecordings=Worship Recordings}
+      NTC_NEXTCLOUD_PATH_MAPPINGS: ${NTC_NEXTCLOUD_PATH_MAPPINGS:-/mnt/MainRecordings/Recordings/MessageRecordings=Message Recordings;/mnt/MainRecordings/Recordings/WorshipRecordings=Worship Recordings;/mnt/MainRecordings/Recordings/TestimonyRecordings=Testimony Recordings;/mnt/MainRecordings/Recordings/BabyDedicationRecordings=Baby Dedication Recordings}
       NTC_RECORDINGS_EMAIL_ENABLED: ${NTC_RECORDINGS_EMAIL_ENABLED:-0}
       NTC_RECORDINGS_EMAIL_FROM: ${NTC_RECORDINGS_EMAIL_FROM:-}
       NTC_RECORDINGS_SMTP_HOST: ${NTC_RECORDINGS_SMTP_HOST:-}
@@ -279,10 +433,15 @@ services:
       NTC_RECORDINGS_SMTP_PASSWORD: ${NTC_RECORDINGS_SMTP_PASSWORD:-}
       NTC_RECORDINGS_SMTP_STARTTLS: ${NTC_RECORDINGS_SMTP_STARTTLS:-1}
       NTC_RECORDINGS_AUTO_ARCHIVE_DAYS: ${NTC_RECORDINGS_AUTO_ARCHIVE_DAYS:-30}
+      NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_URL: ${NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_URL:-}
+      NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_TIMEOUT: ${NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_TIMEOUT:-120}
+      NTC_TRANSCRIPTION_LOCAL_URL: ${NTC_TRANSCRIPTION_LOCAL_URL:-}
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
-      - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:ro
+      - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:rw
       - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:ro
+      - /mnt/MainRecordings/Recordings/TestimonyRecordings:/mnt/MainRecordings/Recordings/TestimonyRecordings:rw
+      - /mnt/MainRecordings/Recordings/BabyDedicationRecordings:/mnt/MainRecordings/Recordings/BabyDedicationRecordings:rw
     command:
       - gunicorn
       - -w
@@ -298,3 +457,15 @@ services:
       timeout: 8s
       retries: 3
       start_period: 20s
+
+networks:
+  ntc-dante-lan:
+    name: ntc-dante-lan
+    driver: macvlan
+    driver_opts:
+      parent: ${NTC_DANTE_PARENT_INTERFACE:-enp9s0}
+    ipam:
+      config:
+        - subnet: ${NTC_DANTE_SUBNET:-192.168.10.0/24}
+          gateway: ${NTC_DANTE_GATEWAY:-192.168.10.1}
+          ip_range: ${NTC_DANTE_IP_RANGE:-192.168.10.230/32}
