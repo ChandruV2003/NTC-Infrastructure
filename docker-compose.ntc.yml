@@ -56,6 +56,7 @@ services:
       NTC_TELNYX_DEBUG_TAP_MAX_SECONDS: ${NTC_TELNYX_DEBUG_TAP_MAX_SECONDS:-300}
       NTC_TELNYX_SMS_LOG_PATH: ${NTC_TELNYX_SMS_LOG_PATH:-/app/data/telnyx-sms-webhooks.jsonl}
       NTC_HLS_PLAYLIST_LENGTH: ${NTC_HLS_PLAYLIST_LENGTH:-30}
+      NTC_HLS_ENABLED: ${NTC_HLS_ENABLED:-1}
       NTC_HLS_DELETE_THRESHOLD: ${NTC_HLS_DELETE_THRESHOLD:-180}
       NTC_HLS_AUDIO_BITRATE: ${NTC_HLS_AUDIO_BITRATE:-256k}
       NTC_HLS_START_TIMEOUT_SECONDS: ${NTC_HLS_START_TIMEOUT_SECONDS:-8.0}
@@ -65,7 +66,11 @@ services:
       NTC_HLS_SEGMENT_EDGE_CACHE_SECONDS: ${NTC_HLS_SEGMENT_EDGE_CACHE_SECONDS:-120}
       NTC_HLS_SNAPSHOT_CACHE_SECONDS: ${NTC_HLS_SNAPSHOT_CACHE_SECONDS:-0.75}
       NTC_HLS_CLEANUP_INTERVAL_SECONDS: ${NTC_HLS_CLEANUP_INTERVAL_SECONDS:-1.5}
+      NTC_SHARED_PCM_ENABLED: ${NTC_SHARED_PCM_ENABLED:-0}
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_SHARED_PCM_RING_CHUNKS: ${NTC_SHARED_PCM_RING_CHUNKS:-240}
       NTC_TRANSCRIPTION_HARD_DISABLED: ${NTC_TRANSCRIPTION_HARD_DISABLED:-0}
+      NTC_TRANSCRIPTION_AUDIO_SOURCE: ${NTC_TRANSCRIPTION_AUDIO_SOURCE:-dante}
       NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND: ${NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND:-0}
       NTC_TRANSCRIPTION_PROVIDER: ${NTC_TRANSCRIPTION_PROVIDER:-openai}
       NTC_TRANSCRIPTION_MODEL: ${NTC_TRANSCRIPTION_MODEL:-}
@@ -98,6 +103,74 @@ services:
       retries: 3
       start_period: 20s
 
+  ntc-dante:
+    profiles:
+      - dante
+    build:
+      context: ../NTC-Dante
+      dockerfile: Dockerfile.ntc
+    image: ntc-dante:latest
+    container_name: ntc-dante
+    mac_address: ${NTC_DANTE_MAC_ADDRESS:-02:42:c0:a8:0a:e6}
+    restart: unless-stopped
+    stop_grace_period: 15s
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      rtprio: 95
+      memlock: -1
+    networks:
+      ntc-dante-lan:
+        ipv4_address: ${NTC_DANTE_IPV4_ADDRESS:-192.168.10.230}
+    depends_on:
+      - ntc-webcall
+    environment:
+      NTC_DANTE_WEBCALL_BASE_URL: ${NTC_DANTE_WEBCALL_BASE_URL:-http://192.168.1.212:1967}
+      NTC_DANTE_HOST_SLUG: ${NTC_DANTE_HOST_SLUG:-ntc-dante}
+      NTC_DANTE_TOKEN: ${NTC_DANTE_TOKEN:-}
+      NTC_DANTE_EXPOSE_ONLY: ${NTC_DANTE_EXPOSE_ONLY:-0}
+      NTC_DANTE_SPLIT_WEBCALL: ${NTC_DANTE_SPLIT_WEBCALL:-0}
+      NTC_DANTE_TRANSCRIPTION_INGEST_ENABLED: ${NTC_DANTE_TRANSCRIPTION_INGEST_ENABLED:-1}
+      NTC_DANTE_ROOM_A_HOST_SLUG: ${NTC_DANTE_ROOM_A_HOST_SLUG:-ntc-dante-room-a}
+      NTC_DANTE_ROOM_A_TOKEN: ${NTC_DANTE_ROOM_A_TOKEN:-}
+      NTC_DANTE_ROOM_A_DEVICE_NAME: ${NTC_DANTE_ROOM_A_DEVICE_NAME:-NTC Dante Room A}
+      NTC_DANTE_ROOM_A_CHANNELS: ${NTC_DANTE_ROOM_A_CHANNELS:-1,2}
+      NTC_DANTE_ROOM_A_AES67_SDP: ${NTC_DANTE_ROOM_A_AES67_SDP:-/app/data/aes67/room-a.sdp}
+      NTC_DANTE_ROOM_B_HOST_SLUG: ${NTC_DANTE_ROOM_B_HOST_SLUG:-ntc-dante-room-b}
+      NTC_DANTE_ROOM_B_TOKEN: ${NTC_DANTE_ROOM_B_TOKEN:-}
+      NTC_DANTE_ROOM_B_DEVICE_NAME: ${NTC_DANTE_ROOM_B_DEVICE_NAME:-NTC Dante Room B}
+      NTC_DANTE_ROOM_B_CHANNELS: ${NTC_DANTE_ROOM_B_CHANNELS:-3,4}
+      NTC_DANTE_ROOM_B_AES67_SDP: ${NTC_DANTE_ROOM_B_AES67_SDP:-/app/data/aes67/room-b.sdp}
+      NTC_DANTE_MODE: ${NTC_DANTE_MODE:-inferno}
+      NTC_DANTE_INTERFACE: ${NTC_DANTE_INTERFACE:-192.168.10.230}
+      NTC_DANTE_DEVICE_NAME: ${NTC_DANTE_DEVICE_NAME:-NTC Dante 4ch (192.168.10.230)}
+      NTC_DANTE_CHANNELS: ${NTC_DANTE_CHANNELS:-4}
+      NTC_DANTE_SAMPLE_RATE: ${NTC_DANTE_SAMPLE_RATE:-48000}
+      NTC_DANTE_AES67_SDP: ${NTC_DANTE_AES67_SDP:-}
+      INFERNO_BIND_IP: ${INFERNO_BIND_IP:-192.168.10.230}
+      INFERNO_CLOCK_PATH: ${INFERNO_CLOCK_PATH:-/dev/ptp0}
+      INFERNO_NAME: ${INFERNO_NAME:-NTC-Dante}
+      INFERNO_RX_LATENCY_NS: ${INFERNO_RX_LATENCY_NS:-10000000}
+      RUST_LOG: ${NTC_DANTE_RUST_LOG:-info}
+      RUST_BACKTRACE: ${NTC_DANTE_RUST_BACKTRACE:-1}
+    devices:
+      - ${NTC_DANTE_CLOCK_DEVICE:-/dev/ptp0}:/dev/ptp0
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}/dante:/app/data
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}/dante/inferno-state:/root/.local/state/inferno_aoip
+    healthcheck:
+      test: ["CMD", "python3", "/app/ntc_dante_healthcheck.py"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
   ntc-hls-nginx:
     image: nginx:1.27-alpine
     container_name: ntc-hls-nginx
@@ -115,6 +188,76 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  ntc-webcall-hls:
+    profiles:
+      - webcall-split
+    build:
+      context: ../NTC-WebCall
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-webcall-hls
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    environment:
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_WEBCALL_WORKER_ROOMS: ${NTC_WEBCALL_WORKER_ROOMS:-room-a,room-b}
+      NTC_WEBCALL_WORKER_STATUS_ROOT: ${NTC_WEBCALL_WORKER_STATUS_ROOT:-/app/data/webcall-workers}
+      NTC_HLS_OUTPUT_ROOT: ${NTC_HLS_OUTPUT_ROOT:-/app/data/hls}
+      NTC_HLS_AUDIO_BITRATE: ${NTC_HLS_AUDIO_BITRATE:-256k}
+      NTC_HLS_SEGMENT_SECONDS: ${NTC_HLS_SEGMENT_SECONDS:-1.0}
+      NTC_HLS_PLAYLIST_LENGTH: ${NTC_HLS_PLAYLIST_LENGTH:-30}
+      NTC_HLS_DELETE_THRESHOLD: ${NTC_HLS_DELETE_THRESHOLD:-180}
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
+    command: ["python3", "ntc_webcall_worker.py", "hls"]
+
+  ntc-webcall-telnyx:
+    profiles:
+      - webcall-split
+    build:
+      context: ../NTC-WebCall
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-webcall-telnyx
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      rtprio: 80
+      memlock: -1
+    environment:
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_WEBCALL_WORKER_ROOMS: ${NTC_WEBCALL_WORKER_ROOMS:-room-a,room-b}
+      NTC_WEBCALL_WORKER_STATUS_ROOT: ${NTC_WEBCALL_WORKER_STATUS_ROOT:-/app/data/webcall-workers}
+      NTC_TELNYX_STREAM_FRAME_MS: ${NTC_TELNYX_STREAM_FRAME_MS:-100}
+      NTC_TELEPHONY_MONO_MIX: ${NTC_TELEPHONY_MONO_MIX:-left}
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
+    command: ["python3", "ntc_webcall_worker.py", "telnyx"]
+
+  ntc-webcall-dsp:
+    profiles:
+      - webcall-split
+    build:
+      context: ../NTC-WebCall
+      dockerfile: Dockerfile.ntc
+    container_name: ntc-webcall-dsp
+    restart: unless-stopped
+    depends_on:
+      - ntc-webcall
+    environment:
+      NTC_SHARED_PCM_ROOT: ${NTC_SHARED_PCM_ROOT:-/app/data/shared-pcm}
+      NTC_DSP_SHARED_PCM_ROOT: ${NTC_DSP_SHARED_PCM_ROOT:-/app/data/shared-pcm-dsp}
+      NTC_WEBCALL_WORKER_ROOMS: ${NTC_WEBCALL_WORKER_ROOMS:-room-a,room-b}
+      NTC_WEBCALL_WORKER_STATUS_ROOT: ${NTC_WEBCALL_WORKER_STATUS_ROOT:-/app/data/webcall-workers}
+      NTC_DSP_GAIN_DB: ${NTC_DSP_GAIN_DB:-0}
+    volumes:
+      - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
+    command: ["python3", "ntc_webcall_worker.py", "dsp"]
 
   ntc-watchdog:
     build:
@@ -314,3 +457,15 @@ services:
       timeout: 8s
       retries: 3
       start_period: 20s
+
+networks:
+  ntc-dante-lan:
+    name: ntc-dante-lan
+    driver: macvlan
+    driver_opts:
+      parent: ${NTC_DANTE_PARENT_INTERFACE:-enp9s0}
+    ipam:
+      config:
+        - subnet: ${NTC_DANTE_SUBNET:-192.168.10.0/24}
+          gateway: ${NTC_DANTE_GATEWAY:-192.168.10.1}
+          ip_range: ${NTC_DANTE_IP_RANGE:-192.168.10.230/32}
