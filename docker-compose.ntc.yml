@@ -444,6 +444,9 @@ services:
       NTC_RECORDINGS_AUTO_ARCHIVE_DAYS: ${NTC_RECORDINGS_AUTO_ARCHIVE_DAYS:-30}
       NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_URL: ${NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_URL:-}
       NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_TIMEOUT: ${NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_TIMEOUT:-120}
+      NTC_RECORDINGS_TESTIMONY_SOURCE_DIR: ${NTC_RECORDINGS_TESTIMONY_SOURCE_DIR:-/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/LegacyDN300RReview}
+      NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS: ${NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS:-/mnt/MainRecordings/Recordings/_IncomingRecorderIntake}
+      NTC_RECORDINGS_TESTIMONY_RECORDER_MANIFESTS: ${NTC_RECORDINGS_TESTIMONY_RECORDER_MANIFESTS:-/app/data/autosyncmix/recorders/DN700R/manifest.sqlite3}
       NTC_TRANSCRIPTION_LOCAL_URL: ${NTC_TRANSCRIPTION_LOCAL_URL:-}
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
@@ -451,6 +454,7 @@ services:
       - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:ro
       - /mnt/MainRecordings/Recordings/TestimonyRecordings:/mnt/MainRecordings/Recordings/TestimonyRecordings:rw
       - /mnt/MainRecordings/Recordings/BabyDedicationRecordings:/mnt/MainRecordings/Recordings/BabyDedicationRecordings:rw
+      - /mnt/MainRecordings/Recordings/_IncomingRecorderIntake:/mnt/MainRecordings/Recordings/_IncomingRecorderIntake:rw
     command:
       - gunicorn
       - -w
