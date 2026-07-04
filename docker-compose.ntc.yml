@@ -138,7 +138,7 @@ services:
       - ntc-webcall
       - ntc-transcription
     environment:
-      NTC_DANTE_WEBCALL_BASE_URL: ${NTC_DANTE_WEBCALL_BASE_URL:-http://192.168.1.212:1967}
+      NTC_DANTE_WEBCALL_BASE_URL: ${NTC_DANTE_WEBCALL_BASE_URL:-http://ntc-webcall:1967}
       NTC_DANTE_TRANSCRIPTION_BASE_URL: ${NTC_DANTE_TRANSCRIPTION_BASE_URL:-http://ntc-transcription:1975}
       NTC_DANTE_HOST_SLUG: ${NTC_DANTE_HOST_SLUG:-ntc-dante}
       NTC_DANTE_TOKEN: ${NTC_DANTE_TOKEN:-}
