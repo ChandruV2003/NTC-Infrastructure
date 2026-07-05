@@ -13,6 +13,7 @@ Environment=MIXASSIST_AES67_LOCALADDR=192.168.10.230
 Environment="MIXASSIST_AES67_SOURCE_LABEL=Q-SYS NTC-LR"
 Environment=MIXASSIST_AES67_CHANNEL_PAIR=1,2
 Environment=MIXASSIST_AES67_TARGET=udp://172.16.5.1:19840?pkt_size=4096
+EnvironmentFile=-/run/ntc-mixassist/aes67.env
 ExecStart=/root/NTC-MixAssist/scripts/mixassist_aes67_to_udp.sh
 Restart=always
 RestartSec=3

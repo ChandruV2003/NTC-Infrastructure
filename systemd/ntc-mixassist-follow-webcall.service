@@ -1,0 +1,15 @@
+[Unit]
+Description=NTC MixAssist WebCall active-room follower
+After=network-online.target ntc-mixassist.service ntc-mixassist-aes67.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/NTC-Infrastructure
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /root/NTC-Infrastructure/scripts/mixassist_follow_webcall_room.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
