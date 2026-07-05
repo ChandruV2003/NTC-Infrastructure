@@ -11,7 +11,7 @@ Environment=MIXASSIST_AES67_CONTAINER=ntc-dante
 Environment=MIXASSIST_AES67_SDP=/app/data/aes67/qsys-ntc-lr.sdp
 Environment=MIXASSIST_AES67_LOCALADDR=192.168.10.230
 Environment="MIXASSIST_AES67_SOURCE_LABEL=Q-SYS NTC-LR"
-Environment=MIXASSIST_AES67_CHANNEL_PAIR=3,4
+Environment=MIXASSIST_AES67_CHANNEL_PAIR=1,2
 Environment=MIXASSIST_AES67_TARGET=udp://172.16.5.1:19840?pkt_size=4096
 ExecStart=/root/NTC-MixAssist/scripts/mixassist_aes67_to_udp.sh
 Restart=always
