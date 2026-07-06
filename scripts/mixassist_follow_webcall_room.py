@@ -18,6 +18,7 @@ AES67_ENV = RUN_DIR / "aes67.env"
 APP_ENV = RUN_DIR / "app-source.env"
 STATE_PATH = RUN_DIR / "webcall-follow-state.json"
 STALE_SECONDS = float(os.getenv("MIXASSIST_WEBCALL_STATE_STALE_SECONDS", "30.0"))
+IDLE_LABEL = os.getenv("MIXASSIST_IDLE_SOURCE_LABEL", "No active WebCall room")
 
 
 ROOM_CONFIG = {
@@ -45,6 +46,9 @@ def main() -> int:
         elif room and env_missing_or_stale(room):
             apply_room(room)
             last_room = room
+        elif not room and (last_room or current_state_room()):
+            clear_room()
+            last_room = ""
         time.sleep(POLL_SECONDS)
 
 
@@ -61,7 +65,15 @@ def active_room_from_healthz() -> str:
             payload = json.loads(response.read().decode("utf-8"))
     except Exception:
         return ""
-    for key in ("active_call_rooms", "ingesting_rooms", "active_rooms"):
+
+    active_call_rooms = payload.get("active_call_rooms")
+    if isinstance(active_call_rooms, list):
+        for room in active_call_rooms:
+            if room in ROOM_CONFIG:
+                return room
+        return ""
+
+    for key in ("ingesting_rooms", "active_rooms"):
         rooms = payload.get(key)
         if not isinstance(rooms, list):
             continue
@@ -112,9 +124,30 @@ def apply_room(room: str):
     restart_analysis_services()
 
 
+def clear_room():
+    write_env(APP_ENV, {"MIXASSIST_UDP_SOURCE_LABEL": IDLE_LABEL})
+    write_json(
+        STATE_PATH,
+        {
+            "room": "",
+            "label": IDLE_LABEL,
+            "sdp": "",
+            "channel_pair": "",
+            "active": False,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    stop_analysis_feed()
+
+
 def restart_analysis_services():
     subprocess.run(["systemctl", "restart", "ntc-mixassist.service"], timeout=20, check=False)
     subprocess.run(["systemctl", "restart", "ntc-mixassist-aes67.service"], timeout=20, check=False)
+
+
+def stop_analysis_feed():
+    subprocess.run(["systemctl", "stop", "ntc-mixassist-aes67.service"], timeout=20, check=False)
+    subprocess.run(["systemctl", "restart", "ntc-mixassist.service"], timeout=20, check=False)
 
 
 def env_missing_or_stale(room: str) -> bool:
@@ -122,6 +155,14 @@ def env_missing_or_stale(room: str) -> bool:
         return True
     state = read_json(STATE_PATH)
     return state.get("room") != room
+
+
+def current_state_room() -> str:
+    state = read_json(STATE_PATH)
+    room = state.get("room")
+    if isinstance(room, str):
+        return room
+    return ""
 
 
 def read_json(path: Path) -> dict:
