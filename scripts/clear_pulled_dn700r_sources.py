@@ -53,9 +53,30 @@ def _delete_denon_ftp_source(source: dict, source_path: str, prepared_sources: d
         return ok, f"{raw}; {prepared_sources[source_name]}"
 
 
+def _source_is_recording(source: dict) -> tuple[bool, str]:
+    status_code, raw_status = sync.query_denon_transport_status(source)
+    return status_code in sync.DENON_RECORDING_STATUSES, raw_status
+
+
+def _recorder_busy_sources(sources: dict[str, dict]) -> dict[str, str]:
+    busy: dict[str, str] = {}
+    for source_name, source in sources.items():
+        if source.get("type") != "denon_ftp":
+            continue
+        try:
+            is_recording, raw_status = _source_is_recording(source)
+        except (OSError, RuntimeError, ValueError) as exc:
+            busy[source_name] = f"status unavailable; source cleanup deferred: {exc}"
+            continue
+        if is_recording:
+            busy[source_name] = f"recorder status {raw_status}; source cleanup deferred"
+    return busy
+
+
 def _clear_sources(config: dict, *, limit: int | None, apply: bool) -> dict[str, int]:
     counts = {"checked": 0, "verified": 0, "deleted": 0, "skipped": 0, "errors": 0}
     sources = {str(source["name"]): source for source in sync.enabled_sources(config)}
+    busy_sources = _recorder_busy_sources(sources)
     prepared_sources: dict[str, str] = {}
     with sync.connect_database(config) as connection:
         rows = connection.execute(
@@ -74,6 +95,15 @@ def _clear_sources(config: dict, *, limit: int | None, apply: bool) -> dict[str,
             source = sources.get(_row_text(row, "source_name"))
             if not source or source.get("type") != "denon_ftp":
                 counts["skipped"] += 1
+                continue
+            busy_reason = busy_sources.get(str(source["name"]))
+            if busy_reason:
+                counts["skipped"] += 1
+                if apply:
+                    connection.execute(
+                        "UPDATE recorder_files SET source_clear_result = ?, last_seen_at = ? WHERE id = ?",
+                        (busy_reason, utc_now(), row["id"]),
+                    )
                 continue
             source_path = _row_text(row, "source_path")
             if not source_path.startswith("/"):
