@@ -51,13 +51,13 @@ def status_label(code: str, raw: str) -> str:
     return f"{label} ({raw})" if raw else label
 
 
-def recorder_is_busy(config: dict, *, label: str, timeout_seconds: float, attempts: int) -> bool:
+def recorder_state(config: dict, *, label: str, timeout_seconds: float, attempts: int) -> str:
     sources = denon_sources(config, timeout_seconds=timeout_seconds, attempts=attempts)
     if not sources:
         print(f"[{label}] idle guard skipped: no enabled DN700R FTP sources in config")
-        return False
+        return "idle"
 
-    busy = False
+    state = "idle"
     for source in sources:
         source_name = str(source.get("name") or "DN700R")
         try:
@@ -65,13 +65,13 @@ def recorder_is_busy(config: dict, *, label: str, timeout_seconds: float, attemp
         except (OSError, RuntimeError, ValueError) as exc:
             print(
                 f"[{label}] idle guard: {source_name} status unavailable; "
-                f"skipping pipeline so recording priority is preserved: {exc}"
+                f"recording priority check could not confirm idle: {exc}"
             )
-            return True
+            return "unavailable"
         print(f"[{label}] idle guard: {source_name} status {status_label(code, raw)}")
         if code in RECORDING_STATUS_CODES:
-            busy = True
-    return busy
+            state = "busy"
+    return state
 
 
 def main() -> int:
@@ -81,6 +81,7 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--label", default="DN700R")
     parser.add_argument("--active-check-interval", type=float, default=2.0)
+    parser.add_argument("--active-unavailable-strikes", type=int, default=6)
     parser.add_argument("--status-timeout", type=float, default=1.2)
     parser.add_argument("--status-attempts", type=int, default=1)
     parser.add_argument("--dry-run", action="store_true")
@@ -96,13 +97,14 @@ def main() -> int:
         parser.error("command to run is required after --")
 
     config = sync.load_config(args.config)
-    if recorder_is_busy(
+    initial_state = recorder_state(
         config,
         label=args.label,
         timeout_seconds=args.status_timeout,
         attempts=args.status_attempts,
-    ):
-        print(f"[{args.label}] pipeline skipped: recorder is busy or status is unavailable")
+    )
+    if initial_state != "idle":
+        print(f"[{args.label}] pipeline skipped: recorder is {initial_state}")
         return 0
 
     if args.dry_run:
@@ -110,18 +112,33 @@ def main() -> int:
         return 0
 
     process = subprocess.Popen(command, env=os.environ.copy(), start_new_session=True)
+    unavailable_strikes = 0
     while process.poll() is None:
         time.sleep(max(0.5, args.active_check_interval))
         if process.poll() is not None:
             break
-        if recorder_is_busy(
+        active_state = recorder_state(
             config,
             label=args.label,
             timeout_seconds=args.status_timeout,
             attempts=args.status_attempts,
-        ):
+        )
+        if active_state == "idle":
+            unavailable_strikes = 0
+            continue
+        if active_state == "unavailable":
+            unavailable_strikes += 1
+            max_strikes = max(1, args.active_unavailable_strikes)
             print(
-                f"[{args.label}] pipeline interrupted: recorder became busy "
+                f"[{args.label}] idle guard: status unavailable during active pull "
+                f"({unavailable_strikes}/{max_strikes}); letting current transfer continue"
+            )
+            if unavailable_strikes < max_strikes:
+                continue
+
+        if active_state in {"busy", "unavailable"}:
+            print(
+                f"[{args.label}] pipeline interrupted: recorder became {active_state} "
                 "while the pull/promote job was running"
             )
             try:

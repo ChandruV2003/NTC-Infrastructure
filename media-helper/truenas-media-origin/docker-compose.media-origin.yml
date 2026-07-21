@@ -1,0 +1,20 @@
+name: ntc-media-origin
+
+services:
+  ntc-media-origin-nginx:
+    image: nginx:1.27-alpine
+    container_name: ntc-media-origin-nginx
+    restart: unless-stopped
+    ports:
+      - "${NTC_MEDIA_ORIGIN_BIND:-127.0.0.1}:${NTC_MEDIA_ORIGIN_PORT:-1978}:8080"
+    environment:
+      NTC_MEDIA_ORIGIN_KEY: ${NTC_MEDIA_ORIGIN_KEY:?set NTC_MEDIA_ORIGIN_KEY}
+    volumes:
+      - /mnt/MainRecordings/Recordings/VideoRecordings/.ntc-delivery:/usr/share/nginx/html/media-origin:ro
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz | grep -q '\"ok\":true'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

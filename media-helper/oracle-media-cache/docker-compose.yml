@@ -1,0 +1,52 @@
+name: ntc-media-helper
+
+services:
+  nginx-cache:
+    image: nginx:1.27-alpine
+    container_name: ntc-media-cache-nginx
+    restart: unless-stopped
+    environment:
+      NTC_ORIGIN_SCHEME: ${NTC_ORIGIN_SCHEME:-https}
+      NTC_ORIGIN_HOST: ${NTC_ORIGIN_HOST:-ntcnas.myftp.org}
+      NTC_ORIGIN_PATH_PREFIX: ${NTC_ORIGIN_PATH_PREFIX:-/media-origin/}
+      NTC_ORIGIN_KEY: ${NTC_ORIGIN_KEY:?set NTC_ORIGIN_KEY}
+      NTC_CACHE_MAX_SIZE: ${NTC_CACHE_MAX_SIZE:-10g}
+      NTC_ALLOWED_PAGE_ORIGIN: ${NTC_ALLOWED_PAGE_ORIGIN:-https://ntcnas.myftp.org}
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - /var/cache/ntc-media-helper:/var/cache/nginx/ntc-media:rw
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz | grep -q '\"ok\":true'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  caddy:
+    image: caddy:2.9-alpine
+    container_name: ntc-media-cache-caddy
+    restart: unless-stopped
+    depends_on:
+      - nginx-cache
+    environment:
+      NTC_MEDIA_HOSTNAME: ${NTC_MEDIA_HOSTNAME:?set NTC_MEDIA_HOSTNAME}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz | grep -q '\"ok\":true'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  caddy_data:
+  caddy_config:
+

@@ -1,5 +1,5 @@
 [Unit]
-Description=Run NTC DN700R recorder ingest pipeline every minute
+Description=Run NTC DN700R message recorder organize/title pipeline every minute
 
 [Timer]
 OnCalendar=*-*-* *:*:00
