@@ -30,12 +30,20 @@ STATUS_LABELS = {
 }
 
 
-def denon_sources(config: dict) -> list[dict]:
-    return [
+def denon_sources(config: dict, *, timeout_seconds: float, attempts: int) -> list[dict]:
+    sources = [
         source
         for source in sync.enabled_sources(config)
         if source.get("type") == "denon_ftp"
     ]
+    guard_sources: list[dict] = []
+    for source in sources:
+        guard_source = dict(source)
+        guard_source["serial_timeout_seconds"] = timeout_seconds
+        guard_source["serial_attempts"] = attempts
+        guard_source["serial_retry_sleep_seconds"] = 0
+        guard_sources.append(guard_source)
+    return guard_sources
 
 
 def status_label(code: str, raw: str) -> str:
@@ -43,8 +51,8 @@ def status_label(code: str, raw: str) -> str:
     return f"{label} ({raw})" if raw else label
 
 
-def recorder_is_busy(config: dict, *, label: str) -> bool:
-    sources = denon_sources(config)
+def recorder_is_busy(config: dict, *, label: str, timeout_seconds: float, attempts: int) -> bool:
+    sources = denon_sources(config, timeout_seconds=timeout_seconds, attempts=attempts)
     if not sources:
         print(f"[{label}] idle guard skipped: no enabled DN700R FTP sources in config")
         return False
@@ -73,6 +81,8 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--label", default="DN700R")
     parser.add_argument("--active-check-interval", type=float, default=2.0)
+    parser.add_argument("--status-timeout", type=float, default=1.2)
+    parser.add_argument("--status-attempts", type=int, default=1)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -86,7 +96,12 @@ def main() -> int:
         parser.error("command to run is required after --")
 
     config = sync.load_config(args.config)
-    if recorder_is_busy(config, label=args.label):
+    if recorder_is_busy(
+        config,
+        label=args.label,
+        timeout_seconds=args.status_timeout,
+        attempts=args.status_attempts,
+    ):
         print(f"[{args.label}] pipeline skipped: recorder is busy or status is unavailable")
         return 0
 
@@ -99,7 +114,12 @@ def main() -> int:
         time.sleep(max(0.5, args.active_check_interval))
         if process.poll() is not None:
             break
-        if recorder_is_busy(config, label=args.label):
+        if recorder_is_busy(
+            config,
+            label=args.label,
+            timeout_seconds=args.status_timeout,
+            attempts=args.status_attempts,
+        ):
             print(
                 f"[{args.label}] pipeline interrupted: recorder became busy "
                 "while the pull/promote job was running"
