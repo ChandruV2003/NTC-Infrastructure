@@ -1,0 +1,10 @@
+[Unit]
+Description=Clear verified NTC DN700R source files every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:45
+AccuracySec=5s
+Unit=ntc-dn700r-source-cleanup.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Clear verified source files from CVAV DN700R after NAS pull
+Wants=network-online.target
+After=network-online.target ntc-cvav-dn700r-recorder-pipeline.service
+ConditionPathExists=/root/NTC-AutoSyncMix/config/recorders/DN700R_cvav_ftp.json
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/NTC-Runtime/autosyncmix
+ExecStart=/usr/bin/python3 /root/NTC-Runtime/autosyncmix/bin/clear_pulled_dn700r_sources.py --config /root/NTC-AutoSyncMix/config/recorders/DN700R_cvav_ftp.json --lock /root/NTC-Runtime/autosyncmix/recorders/CVAV-DN700R/pipeline.lock --limit 20 --apply
+Nice=5

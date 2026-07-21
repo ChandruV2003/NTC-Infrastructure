@@ -1,0 +1,10 @@
+[Unit]
+Description=Clear verified source files from NTC DN700R after NAS pull
+Wants=network-online.target
+After=network-online.target ntc-dn700r-recorder-pipeline.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/NTC-Runtime/autosyncmix
+ExecStart=/usr/bin/python3 /root/NTC-Runtime/autosyncmix/bin/clear_pulled_dn700r_sources.py --config /root/NTC-AutoSyncMix/config/recorders/DN700R_ftp.json --lock /root/NTC-Runtime/autosyncmix/recorders/DN700R/pipeline.lock --limit 20 --apply
+Nice=5
