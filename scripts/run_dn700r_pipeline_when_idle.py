@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 AUTOSYNCMIX_RECORDER_SCRIPTS = Path("/root/NTC-AutoSyncMix/scripts/recorders")
@@ -70,6 +72,7 @@ def main() -> int:
     )
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--label", default="DN700R")
+    parser.add_argument("--active-check-interval", type=float, default=2.0)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -91,8 +94,30 @@ def main() -> int:
         print(f"[{args.label}] dry run: would execute {' '.join(command)}")
         return 0
 
-    completed = subprocess.run(command, env=os.environ.copy(), check=False)
-    return int(completed.returncode)
+    process = subprocess.Popen(command, env=os.environ.copy(), start_new_session=True)
+    while process.poll() is None:
+        time.sleep(max(0.5, args.active_check_interval))
+        if process.poll() is not None:
+            break
+        if recorder_is_busy(config, label=args.label):
+            print(
+                f"[{args.label}] pipeline interrupted: recorder became busy "
+                "while the pull/promote job was running"
+            )
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.wait(timeout=10)
+            return 0
+    return int(process.returncode or 0)
 
 
 if __name__ == "__main__":
