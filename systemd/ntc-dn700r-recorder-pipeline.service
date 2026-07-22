@@ -6,9 +6,16 @@ After=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=/root/NTC-AutoSyncMix
+Environment=CONFIG=/root/NTC-AutoSyncMix/config/recorders/DN700R_ftp.json
+Environment=STATE_DIR=/root/NTC-Runtime/autosyncmix/recorders/DN700R
+Environment=LOG_DIR=/root/NTC-Runtime/autosyncmix/recorders/DN700R/logs
+Environment=LANE_ID=dn700r-message-recorder
+Environment=RECORDER_MODEL=DN700R
+Environment=PIPELINE_ROLE=message-testimony-organize-title
+Environment=PIPELINE_LABEL=NTC-DN700R
 Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
 Environment=CLASSIFY_LIMIT=20
 Environment=RUN_MATCH_EXISTING=0
 Environment=AGENT_DECISION_LIMIT=20
-ExecStart=/root/NTC-Agent/run_dn700r_agent_pipeline.sh
+ExecStart=/root/NTC-AutoSyncMix/scripts/recorders/run_DN700R_pipeline.sh
 Nice=5

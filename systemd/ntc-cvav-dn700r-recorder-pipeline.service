@@ -1,0 +1,22 @@
+[Unit]
+Description=CVAV portable-rack DN700R recorder organize/title pipeline
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/root/NTC-AutoSyncMix/config/recorders/DN700R_cvav_ftp.json
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/NTC-AutoSyncMix
+Environment=CONFIG=/root/NTC-AutoSyncMix/config/recorders/DN700R_cvav_ftp.json
+Environment=STATE_DIR=/root/NTC-Runtime/autosyncmix/recorders/CVAV-DN700R
+Environment=LOG_DIR=/root/NTC-Runtime/autosyncmix/recorders/CVAV-DN700R/logs
+Environment=LANE_ID=cvav-dn700r-recorder
+Environment=RECORDER_MODEL=CVAV-DN700R
+Environment=PIPELINE_ROLE=cvav-portable-rack-organize-title
+Environment=PIPELINE_LABEL=CVAV-DN700R
+Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+Environment=CLASSIFY_LIMIT=2
+Environment=RUN_MATCH_EXISTING=0
+Environment=AGENT_DECISION_LIMIT=20
+ExecStart=/root/NTC-AutoSyncMix/scripts/recorders/run_DN700R_pipeline.sh
+Nice=5
