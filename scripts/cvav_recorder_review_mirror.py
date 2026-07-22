@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import shutil
 import sqlite3
 import tempfile
@@ -46,9 +47,14 @@ def clean_relative_path(value: str) -> Path:
     return Path(*parts)
 
 
-def destination_for(row: sqlite3.Row, dest_root: Path) -> Path:
-    source_name = str(row["source_name"] or "unknown-source").strip() or "unknown-source"
-    return dest_root / source_name / clean_relative_path(str(row["source_relative_path"] or ""))
+def clean_folder_name(value: str) -> str:
+    folder = re.sub(r"[\\/]+", "-", value.strip()) if value else ""
+    folder = folder.strip(" .")
+    return folder or "Intake"
+
+
+def destination_for(row: sqlite3.Row, dest_root: Path, folder_name: str) -> Path:
+    return dest_root / folder_name / clean_relative_path(str(row["source_relative_path"] or ""))
 
 
 def unique_destination(path: Path, row_id: int) -> Path:
@@ -91,7 +97,13 @@ def copy_verified(src: Path, dest: Path, expected_hash: str, row_id: int) -> tup
     return dest, source_hash, "mirrored"
 
 
-def mirror_files(manifest: Path, dest_root: Path, limit: int | None, apply: bool) -> dict[str, int]:
+def mirror_files(
+    manifest: Path,
+    dest_root: Path,
+    folder_name: str,
+    limit: int | None,
+    apply: bool,
+) -> dict[str, int]:
     counts = {"checked": 0, "mirrored": 0, "already": 0, "missing": 0, "errors": 0}
     with sqlite3.connect(manifest) as connection:
         connection.row_factory = sqlite3.Row
@@ -126,7 +138,7 @@ def mirror_files(manifest: Path, dest_root: Path, limit: int | None, apply: bool
                             (row_id, "", "", utc_now(), f"staged file missing: {src}"),
                         )
                     continue
-                dest = destination_for(row, dest_root)
+                dest = destination_for(row, dest_root, folder_name)
                 dest, file_hash, result = copy_verified(src, dest, str(row["sha256"] or ""), row_id)
                 if result == "already mirrored":
                     counts["already"] += 1
@@ -169,11 +181,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Mirror CVAV DN700R staged files into visible storage.")
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--dest-root", required=True, type=Path)
+    parser.add_argument("--folder-name", default="Intake")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
 
-    counts = mirror_files(args.manifest, args.dest_root, args.limit, args.apply)
+    counts = mirror_files(args.manifest, args.dest_root, clean_folder_name(args.folder_name), args.limit, args.apply)
     mode = "applied" if args.apply else "dry-run"
     print(
         f"cvav review mirror {mode}: "
