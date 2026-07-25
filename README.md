@@ -7,9 +7,24 @@ Secrets, live `.env` files, SQLite databases, prompt audio, and generated HLS/ru
 ## Included
 
 - Docker Compose templates
-- Nginx/HLS edge configuration
+- Nginx/HLS edge and public route configuration
 - Cloudflare Telnyx proxy worker source
 - WebCall and telephony runbooks
+
+## Host Boundaries
+
+TrueNAS remains the public ingress, storage, and control-plane host. Compute
+workers may run on other machines, but public clients continue to use
+`https://ntcnas.myftp.org`.
+
+The Mac Pro runs `NTC-MultiTrack` behind Tailscale Serve. TrueNAS Nginx Proxy
+Manager forwards `/multitrack` to that private endpoint using
+`nginx/ntc-multitrack-route.conf`. Do not expose port `8891` directly or create
+a second public DNS name for the Mac Pro.
+
+The former TrueNAS `ntc-autosyncmix-panel.service` is a temporary migration
+dependency only. Disable it after the Mac Pro has healthy SMB mounts and local
+take discovery has been verified.
 
 ## Runtime Services
 
