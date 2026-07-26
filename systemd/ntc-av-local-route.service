@@ -1,0 +1,14 @@
+[Unit]
+Description=Prefer the Mac Pro AV NIC for the auditorium subnet
+After=network-online.target tailscaled.service
+Wants=network-online.target tailscaled.service
+
+[Service]
+Type=oneshot
+ExecStartPre=-/usr/sbin/ip rule del priority 5200
+ExecStart=/usr/sbin/ip rule add priority 5200 to 192.168.10.0/24 lookup main
+ExecStop=-/usr/sbin/ip rule del priority 5200
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

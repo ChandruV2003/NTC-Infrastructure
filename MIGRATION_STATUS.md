@@ -1,6 +1,6 @@
 # NTC NAS Project Migration Status
 
-Last updated: 2026-06-17.
+Last updated: 2026-07-26.
 
 ## Live split services
 
@@ -15,7 +15,8 @@ These services now run from split project directories:
 - `tascam-control`: `/root/NTC-TascamDA6400Control/docker-compose.yml`
 - `denon-dn700r-control`: `/root/NTC-DenonDN700RControl/docker-compose.yml`
 - `ntc-autosyncmix-panel`: `/root/NTC-AutoSyncMix/scripts/multitrack_app.py`, managed by `systemd/ntc-autosyncmix-panel.service`
-- `ntc-livestream`: `/root/NTC-LiveStream/stream_server.py`, managed by `systemd/ntc-livestream.service`
+- `ntc-livestream`: Mac Pro worker at `100.109.220.95:8890`; TrueNAS owns only
+  the `/livestream` reverse-proxy route
 
 Shared mutable runtime data lives at `/root/NTC-Runtime`.
 
@@ -37,12 +38,17 @@ AutoSyncMix and LiveStream previously ran as orphaned Python processes from old 
 - `/root/AutoSyncMix`
 - `/root/LiveStream`
 
-They now run from renamed project paths:
+AutoSyncMix now runs from its renamed TrueNAS project path:
 
 - `/root/NTC-AutoSyncMix`
-- `/root/NTC-LiveStream`
 
-AutoSyncMix live NAS code drift was committed to `NTC-AutoSyncMix` before the cutover. Live environment files remain local and ignored. `/root/.tascam.env` and `/root/NTC-AutoSyncMix/.tascam.env` now point `AUTOMIX_WRAPPER` at `/root/NTC-AutoSyncMix/bin/automix_wrapper.sh`.
+LiveStream source remains in `/root/NTC-LiveStream` for rollback, but its
+TrueNAS service is disabled after cutover to the Mac Pro. Live environment
+files remain local and ignored.
+
+AutoSyncMix live NAS code drift was committed to `NTC-AutoSyncMix` before the
+cutover. `/root/.tascam.env` and `/root/NTC-AutoSyncMix/.tascam.env` point
+`AUTOMIX_WRAPPER` at `/root/NTC-AutoSyncMix/bin/automix_wrapper.sh`.
 
 ## Naming note
 

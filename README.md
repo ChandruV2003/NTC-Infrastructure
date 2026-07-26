@@ -17,10 +17,14 @@ TrueNAS remains the public ingress, storage, and control-plane host. Compute
 workers may run on other machines, but public clients continue to use
 `https://ntcnas.myftp.org`.
 
-The Mac Pro runs `NTC-MultiTrack` behind Tailscale Serve. TrueNAS Nginx Proxy
-Manager forwards `/multitrack` to that private endpoint using
-`nginx/ntc-multitrack-route.conf`. Do not expose port `8891` directly or create
-a second public DNS name for the Mac Pro.
+The Mac Pro runs `NTC-MultiTrack` behind Tailscale Serve and the stateless
+`NTC-LiveStream` RTSP-to-HLS worker on its Tailscale address. TrueNAS remains
+the only public ingress and forwards `/multitrack` and `/livestream` to those
+private workers. Do not create a second public DNS name for the Mac Pro.
+
+`systemd/ntc-av-local-route.service` makes directly connected
+`192.168.10.0/24` AV traffic prefer the Mac Pro's wired AV NIC instead of a
+Tailscale subnet route.
 
 The former TrueNAS `ntc-autosyncmix-panel.service` is a temporary migration
 dependency only. Disable it after the Mac Pro has healthy SMB mounts and local
@@ -37,6 +41,9 @@ take discovery has been verified.
 - `ntc-autosync-mix`
 - `ntc-tascam-da6400-control`
 - `ntc-denon-dn700r-control`
+
+Analysis-only AES67 subscriptions run on the Mac Pro under NTC Dante. The
+production Dante-to-WebCall bridge remains on TrueNAS.
 
 ## Recorder Pipeline Lanes
 
