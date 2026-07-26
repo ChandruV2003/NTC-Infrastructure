@@ -17,18 +17,19 @@ TrueNAS remains the public ingress, storage, and control-plane host. Compute
 workers may run on other machines, but public clients continue to use
 `https://ntcnas.myftp.org`.
 
-The Mac Pro runs `NTC-MultiTrack` behind Tailscale Serve and the stateless
-`NTC-LiveStream` RTSP-to-HLS worker on its Tailscale address. TrueNAS remains
-the only public ingress and forwards `/multitrack` and `/livestream` to those
-private workers. Do not create a second public DNS name for the Mac Pro.
+The Mac Pro runs `NTC-MultiTrack` and `NTC-MixAssist` behind Tailscale Serve,
+plus the stateless `NTC-LiveStream` RTSP-to-HLS worker and the NTC-Agent model
+backend on its Tailscale address. TrueNAS remains the only public ingress and
+forwards `/multitrack`, `/mixassist`, and `/livestream` to those private
+workers. Do not create a second public DNS name for the Mac Pro.
 
 `systemd/ntc-av-local-route.service` makes directly connected
 `192.168.10.0/24` AV traffic prefer the Mac Pro's wired AV NIC instead of a
 Tailscale subnet route.
 
-The former TrueNAS `ntc-autosyncmix-panel.service` is a temporary migration
-dependency only. Disable it after the Mac Pro has healthy SMB mounts and local
-take discovery has been verified.
+The former TrueNAS `ntc-autosyncmix-panel.service` is disabled. The recorder
+ingest, promotion, and mixdown pipelines remain in `NTC-AutoSyncMix`; only the
+browser/proxy processing surface moved to the Mac Pro as `NTC-MultiTrack`.
 
 ## Runtime Services
 

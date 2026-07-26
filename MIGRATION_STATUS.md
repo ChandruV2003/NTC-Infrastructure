@@ -14,9 +14,14 @@ These services now run from split project directories:
 - `status-monitor`: `/root/NTC-StatusControl/docker-compose.yml`
 - `tascam-control`: `/root/NTC-TascamDA6400Control/docker-compose.yml`
 - `denon-dn700r-control`: `/root/NTC-DenonDN700RControl/docker-compose.yml`
-- `ntc-autosyncmix-panel`: `/root/NTC-AutoSyncMix/scripts/multitrack_app.py`, managed by `systemd/ntc-autosyncmix-panel.service`
+- `ntc-multitrack`: Mac Pro worker behind Tailscale Serve; the former TrueNAS
+  `ntc-autosyncmix-panel.service` is disabled
+- `ntc-mixassist`: Mac Pro analysis service behind Tailscale Serve; AES67
+  subscriptions are owned by the Mac Pro NTC-Dante runtime
 - `ntc-livestream`: Mac Pro worker at `100.109.220.95:8890`; TrueNAS owns only
   the `/livestream` reverse-proxy route
+- `ntc-agent`: coordinator, usage ledger, and Codex gateway remain on TrueNAS;
+  the Qwen model backend runs on the Mac Pro at `100.109.220.95:8768`
 
 Shared mutable runtime data lives at `/root/NTC-Runtime`.
 
