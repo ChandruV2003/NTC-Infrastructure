@@ -14,7 +14,7 @@ Environment=LANE_ID=cvav-dn700r-recorder
 Environment=RECORDER_MODEL=CVAV-DN700R
 Environment=PIPELINE_ROLE=cvav-portable-rack-organize-title
 Environment=PIPELINE_LABEL=CVAV-DN700R
-Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.109.220.95:8766/transcription
 Environment=CLASSIFY_LIMIT=2
 Environment=RUN_MATCH_EXISTING=0
 Environment=AGENT_DECISION_LIMIT=20

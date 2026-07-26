@@ -13,7 +13,7 @@ Environment=LANE_ID=dn700r-message-recorder
 Environment=RECORDER_MODEL=DN700R
 Environment=PIPELINE_ROLE=message-testimony-organize-title
 Environment=PIPELINE_LABEL=NTC-DN700R
-Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.109.220.95:8766/transcription
 Environment=CLASSIFY_LIMIT=20
 Environment=RUN_MATCH_EXISTING=0
 Environment=AGENT_DECISION_LIMIT=20
