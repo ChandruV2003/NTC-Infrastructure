@@ -18,4 +18,8 @@ Current WebCall source mapping:
 
 - Room A: FOH-SQ7 flow 121 (`239.69.7.34:5004`), selecting Dante transmit
   channels 61-62 as one-based stream positions 5-6.
-- Room B: the dedicated Q-SYS Room B stereo stream, using positions 1-2.
+- Room B: TM-MXWANI8 flow 31 (`239.69.153.118:5004`), using positions 1-2.
+
+Q-SYS supplies a separate eight-channel analysis bundle at
+`233.254.122.0:5004`: Room A Main LR, Room B Main LR, Video A LR, and Video B
+LR. It is not the WebCall Stream LR source.
