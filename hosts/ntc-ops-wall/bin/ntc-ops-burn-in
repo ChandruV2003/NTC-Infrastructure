@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DURATION="${1:-30m}"
+OUTPUT="${2:-$HOME/ntc-ops-burn-in-$(date +%Y%m%d-%H%M%S).log}"
+
+[[ "$DURATION" =~ ^[1-9][0-9]*[smh]$ ]] || {
+  printf 'Duration must look like 30m, 2h, or 900s.\n' >&2
+  exit 2
+}
+command -v stress-ng >/dev/null 2>&1 || {
+  printf 'stress-ng is not installed.\n' >&2
+  exit 1
+}
+
+mkdir -p "$(dirname -- "$OUTPUT")"
+started_at="$(date --iso-8601=seconds)"
+
+{
+  printf 'NTC Operations host burn-in\n'
+  printf 'Started: %s\n' "$started_at"
+  printf 'Duration: %s\n' "$DURATION"
+  printf '\n===== Sensors before =====\n'
+  sensors 2>&1 || true
+  printf '\n===== stress-ng =====\n'
+} | tee "$OUTPUT"
+
+stress-ng \
+  --cpu 0 \
+  --cpu-method all \
+  --vm 4 \
+  --vm-bytes 50% \
+  --verify \
+  --timeout "$DURATION" \
+  --metrics-brief 2>&1 | tee -a "$OUTPUT"
+
+{
+  printf '\n===== Sensors after =====\n'
+  sensors 2>&1 || true
+  printf '\n===== Kernel errors during run =====\n'
+  journalctl -k --since "$started_at" -p err --no-pager 2>&1 || true
+  printf '\nCompleted: %s\n' "$(date --iso-8601=seconds)"
+} | tee -a "$OUTPUT"
+
+printf 'Burn-in completed. Review %s before production use.\n' "$OUTPUT"

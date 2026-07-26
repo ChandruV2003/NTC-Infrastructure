@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ENV_FILE="${NTC_OPS_WALL_ENV_FILE:-/etc/ntc/ntc-ops-wall.env}"
+if [[ -r "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
+WALL_URL="${NTC_OPS_WALL_URL:-http://127.0.0.1:1986/opswall}"
+HEALTH_URL="${NTC_OPS_WALL_HEALTH_URL:-http://127.0.0.1:1986/healthz}"
+BACKGROUND_URI="${NTC_OPS_WALL_BACKGROUND_URI:-file:///usr/local/share/backgrounds/ntc-embossed-background.jpg}"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/ntc-ops-wall-kiosk.lock"
+
+exec 9>"$LOCK_FILE"
+flock -n 9 || exit 0
+
+gsettings set org.gnome.desktop.session idle-delay 0 >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.screensaver lock-enabled false >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.notifications show-banners false >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.background picture-uri "$BACKGROUND_URI" >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.background picture-uri-dark "$BACKGROUND_URI" >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.background picture-options 'zoom' >/dev/null 2>&1 || true
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing' >/dev/null 2>&1 || true
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing' >/dev/null 2>&1 || true
+gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false >/dev/null 2>&1 || true
+gsettings set org.gnome.shell.extensions.dash-to-dock autohide true >/dev/null 2>&1 || true
+gsettings set org.gnome.shell.extensions.dash-to-dock intellihide true >/dev/null 2>&1 || true
+gsettings set org.gnome.shell.extensions.dash-to-dock show-trash false >/dev/null 2>&1 || true
+gsettings set org.gnome.shell.extensions.dash-to-dock show-mounts false >/dev/null 2>&1 || true
+xset s off >/dev/null 2>&1 || true
+xset -dpms >/dev/null 2>&1 || true
+xset s noblank >/dev/null 2>&1 || true
+
+until curl --connect-timeout 1 --max-time 2 --fail --silent "$HEALTH_URL" >/dev/null; do
+  sleep 1
+done
+
+if command -v chromium-browser >/dev/null 2>&1; then
+  BROWSER="$(command -v chromium-browser)"
+elif command -v chromium >/dev/null 2>&1; then
+  BROWSER="$(command -v chromium)"
+elif [[ -x /snap/bin/chromium ]]; then
+  BROWSER=/snap/bin/chromium
+elif command -v google-chrome-stable >/dev/null 2>&1; then
+  BROWSER="$(command -v google-chrome-stable)"
+else
+  printf 'No supported Chromium browser is installed.\n' >&2
+  exit 1
+fi
+
+exec "$BROWSER" \
+  --kiosk \
+  --app="$WALL_URL" \
+  --no-first-run \
+  --disable-features=Translate \
+  --disable-session-crashed-bubble \
+  --disable-infobars \
+  --autoplay-policy=no-user-gesture-required

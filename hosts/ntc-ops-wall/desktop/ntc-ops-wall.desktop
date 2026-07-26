@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=NTC Operations Wall
+Comment=Open the read-only NTC operations display
+Exec=/usr/local/bin/ntc-ops-wall-kiosk
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=4

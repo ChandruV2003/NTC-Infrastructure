@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+mapfile -t physical_interfaces < <(
+  for interface_path in /sys/class/net/*; do
+    [[ -e "$interface_path/device" ]] || continue
+    basename -- "$interface_path"
+  done | sort
+)
+
+if ((${#physical_interfaces[@]} < 2)); then
+  exit 0
+fi
+
+iptables -N DOCKER-USER 2>/dev/null || true
+
+for input_interface in "${physical_interfaces[@]}"; do
+  for output_interface in "${physical_interfaces[@]}"; do
+    [[ "$input_interface" != "$output_interface" ]] || continue
+    iptables -C DOCKER-USER \
+      -i "$input_interface" \
+      -o "$output_interface" \
+      -j DROP 2>/dev/null ||
+      iptables -I DOCKER-USER 1 \
+        -i "$input_interface" \
+        -o "$output_interface" \
+        -j DROP
+  done
+done

@@ -6,7 +6,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=/root/NTC-AutoSyncMix
-Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+Environment=NTC_TRANSCRIPTION_LOCAL_URL=http://100.109.220.95:8766/transcription
 Environment=CLASSIFY_LIMIT=20
 Environment=RUN_MATCH_EXISTING=0
 ExecStart=/root/NTC-AutoSyncMix/scripts/recorders/run_DN700R_pipeline.sh

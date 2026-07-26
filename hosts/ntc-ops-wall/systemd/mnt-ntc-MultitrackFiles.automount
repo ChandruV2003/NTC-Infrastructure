@@ -1,0 +1,9 @@
+[Unit]
+Description=Automount NTC TrueNAS MultitrackFiles
+
+[Automount]
+Where=/mnt/ntc/MultitrackFiles
+TimeoutIdleSec=600
+
+[Install]
+WantedBy=multi-user.target

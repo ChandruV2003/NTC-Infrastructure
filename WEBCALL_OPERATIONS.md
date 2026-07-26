@@ -221,7 +221,7 @@ python3 tools/whisper_large_server.py \
 
 ```env
 NTC_TRANSCRIPTION_PROVIDER=local_http
-NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+NTC_TRANSCRIPTION_LOCAL_URL=http://100.109.220.95:8766/transcription
 NTC_TRANSCRIPTION_TIMEOUT_SECONDS=45
 ```
 
@@ -234,7 +234,7 @@ Replay a saved recording through the same local transcription handoff without to
 ```bash
 python3 scripts/replay_transcription_sample.py \
   --provider local_http \
-  --local-url http://100.66.210.59:8766/transcription \
+  --local-url http://100.109.220.95:8766/transcription \
   --room room-a \
   --limit-seconds 60 \
   data/diagnostic-audio/hearing-example.wav

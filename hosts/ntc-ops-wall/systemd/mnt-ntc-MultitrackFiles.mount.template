@@ -1,0 +1,14 @@
+[Unit]
+Description=NTC TrueNAS MultitrackFiles SMB mount
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Mount]
+What=//100.69.202.29/MultitrackFiles
+Where=/mnt/ntc/MultitrackFiles
+Type=cifs
+Options=credentials=/etc/ntc/ntc-smb.credentials,uid=@OPERATOR_UID@,gid=@OPERATOR_GID@,forceuid,forcegid,file_mode=0664,dir_mode=0775,iocharset=utf8,vers=3.1.1,serverino,_netdev
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target

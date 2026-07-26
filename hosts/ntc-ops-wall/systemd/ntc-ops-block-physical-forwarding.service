@@ -1,0 +1,12 @@
+[Unit]
+Description=Block forwarding between NTC Operations physical Ethernet ports
+After=network-online.target docker.service tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ntc-ops-block-physical-forwarding
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,32 @@
+[Unit]
+Description=NTC Operations read-only panel for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+Group=%i
+WorkingDirectory=/opt/ntc/NTC-Operations
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=-/etc/ntc/ntc-operations.env
+ExecStart=/usr/bin/python3 -m ntc_operations.app --host 127.0.0.1 --port 1986
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictRealtime=true
+SystemCallArchitectures=native
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

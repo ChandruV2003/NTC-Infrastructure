@@ -1,0 +1,19 @@
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    __CONTROL_INTERFACE__:
+      addresses:
+        - __CONTROL_ADDRESS__
+      routes:
+        - to: default
+          via: __CONTROL_GATEWAY__
+      nameservers:
+        addresses:
+          - __CONTROL_DNS__
+      optional: false
+    __DANTE_INTERFACE__:
+      addresses:
+        - __DANTE_ADDRESS__
+      link-local: []
+      optional: true

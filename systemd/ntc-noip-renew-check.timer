@@ -1,0 +1,11 @@
+[Unit]
+Description=Run NTC No-IP hostname renewal helper daily
+
+[Timer]
+OnCalendar=*-*-* 09:17:00
+Persistent=true
+AccuracySec=10m
+Unit=ntc-noip-renew-check.service
+
+[Install]
+WantedBy=timers.target

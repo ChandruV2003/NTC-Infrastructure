@@ -1,0 +1,9 @@
+[Unit]
+Description=Automount NTC TrueNAS Recordings
+
+[Automount]
+Where=/mnt/ntc/Recordings
+TimeoutIdleSec=600
+
+[Install]
+WantedBy=multi-user.target

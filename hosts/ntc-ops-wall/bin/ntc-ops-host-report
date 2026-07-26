@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -u
+
+OUTPUT="${1:-$HOME/ntc-ops-host-report-$(date +%Y%m%d-%H%M%S).txt}"
+mkdir -p "$(dirname -- "$OUTPUT")"
+
+section() {
+  printf '\n===== %s =====\n' "$1"
+}
+
+{
+  section "Captured"
+  date --iso-8601=seconds
+
+  section "System"
+  hostnamectl 2>&1 || true
+  uname -a
+
+  section "CPU"
+  lscpu 2>&1 || true
+
+  section "Memory"
+  free -h 2>&1 || true
+
+  section "PCI and drivers"
+  lspci -nnk 2>&1 || true
+
+  section "Block devices"
+  lsblk -e 7 -o NAME,MODEL,SERIAL,SIZE,TYPE,FSTYPE,MOUNTPOINTS 2>&1 || true
+
+  section "Network links"
+  ip -brief link 2>&1 || true
+  ip -brief address 2>&1 || true
+  ip route show 2>&1 || true
+  for interface_path in /sys/class/net/*; do
+    interface="$(basename -- "$interface_path")"
+    [[ "$interface" == "lo" ]] && continue
+    printf '\n--- ethtool %s ---\n' "$interface"
+    ethtool "$interface" 2>&1 || true
+  done
+
+  section "Displays"
+  session_runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+  if [[ -S "$session_runtime/bus" ]]; then
+    env \
+      XDG_RUNTIME_DIR="$session_runtime" \
+      DBUS_SESSION_BUS_ADDRESS="unix:path=$session_runtime/bus" \
+      gdbus call \
+        --session \
+        --dest org.gnome.Mutter.DisplayConfig \
+        --object-path /org/gnome/Mutter/DisplayConfig \
+        --method org.gnome.Mutter.DisplayConfig.GetCurrentState 2>&1 || true
+  fi
+  xrandr --current 2>&1 || true
+
+  section "OpenGL"
+  glxinfo -B 2>&1 || true
+
+  section "Temperatures and fans"
+  sensors 2>&1 || true
+
+  section "Storage health"
+  if [[ "$EUID" -eq 0 ]]; then
+    while read -r device _; do
+      [[ -n "${device:-}" ]] || continue
+      printf '\n--- smartctl %s ---\n' "$device"
+      smartctl -a "$device" 2>&1 || true
+    done < <(smartctl --scan-open 2>/dev/null)
+  else
+    printf 'Run with sudo to include SMART data.\n'
+  fi
+
+  section "Failed services"
+  systemctl --failed --no-pager 2>&1 || true
+
+  section "Kernel warnings"
+  journalctl -k -b -p warning --no-pager 2>&1 || true
+} >"$OUTPUT"
+
+printf 'Wrote %s\n' "$OUTPUT"
