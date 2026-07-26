@@ -1,9 +1,12 @@
 v=0
-o=- 0 0 IN IP4 192.168.10.230
+o=- 0 0 IN IP4 192.168.10.55
 s=Room A Stream LR
-c=IN IP4 239.69.252.33/32
+i=FOH-SQ7 AES67 flow 121, Dante transmit channels 57-64
+c=IN IP4 239.69.7.34/32
 t=0 0
-m=audio 5004 RTP/AVP 97
+m=audio 5004 RTP/AVP 103
 a=recvonly
-a=rtpmap:97 L24/48000/2
+a=rtpmap:103 L24/48000/8
 a=ptime:1
+a=ts-refclk:ptp=IEEE1588-2008:00-60-74-FF-FE-EF-3D-79:0
+a=mediaclk:direct=0
