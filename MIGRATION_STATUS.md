@@ -1,6 +1,6 @@
 # NTC NAS Project Migration Status
 
-Last updated: 2026-07-26.
+Last updated: 2026-07-27.
 
 ## Live split services
 
@@ -17,9 +17,11 @@ These services now run from split project directories:
 - `ntc-multitrack`: Mac Pro worker behind Tailscale Serve; the former TrueNAS
   `ntc-autosyncmix-panel.service` is disabled
 - `ntc-mixassist`: Mac Pro analysis service behind Tailscale Serve; AES67
-  subscriptions are owned by the Mac Pro NTC-Dante runtime
+  subscriptions are owned by the Mac Pro NTC-Dante runtime. The retired
+  TrueNAS source checkout and systemd units have been removed.
 - `ntc-livestream`: Mac Pro worker at `100.109.220.95:8890`; TrueNAS owns only
-  the `/livestream` reverse-proxy route
+  the `/livestream` reverse-proxy route. The retired TrueNAS source checkout
+  and systemd unit have been removed.
 - `ntc-agent`: coordinator, usage ledger, and Codex gateway remain on TrueNAS;
   the Qwen model backend runs on the Mac Pro at `100.109.220.95:8768`
 
@@ -47,9 +49,9 @@ AutoSyncMix now runs from its renamed TrueNAS project path:
 
 - `/root/NTC-AutoSyncMix`
 
-LiveStream source remains in `/root/NTC-LiveStream` for rollback, but its
-TrueNAS service is disabled after cutover to the Mac Pro. Live environment
-files remain local and ignored.
+LiveStream now runs only from the Mac Pro checkout. Its former
+`/root/NTC-LiveStream` checkout and TrueNAS service unit were removed after the
+Mac Pro endpoint and Git remote were verified.
 
 AutoSyncMix live NAS code drift was committed to `NTC-AutoSyncMix` before the
 cutover. `/root/.tascam.env` and `/root/NTC-AutoSyncMix/.tascam.env` point
