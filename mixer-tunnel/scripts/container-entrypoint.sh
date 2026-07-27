@@ -32,6 +32,24 @@ require_address() {
     esac
 }
 
+validate_unit() {
+    name="$1"
+    value="$2"
+    suffix="$3"
+    number="${value%"$suffix"}"
+
+    if [ "$number" = "$value" ]; then
+        echo "$name must end in $suffix" >&2
+        exit 1
+    fi
+    case "$number" in
+        *[!0-9]*|"")
+            echo "$name contains an unsupported value: $value" >&2
+            exit 1
+            ;;
+    esac
+}
+
 require_address MIXER_TUNNEL_VPN_NETWORK "${MIXER_TUNNEL_VPN_NETWORK:?}"
 require_address MIXER_TUNNEL_VPN_NETMASK "${MIXER_TUNNEL_VPN_NETMASK:?}"
 require_address MIXER_TUNNEL_VPN_CIDR "${MIXER_TUNNEL_VPN_CIDR:?}"
@@ -40,6 +58,9 @@ require_address MIXER_TUNNEL_LAN_NETMASK "${MIXER_TUNNEL_LAN_NETMASK:?}"
 require_address MIXER_TUNNEL_LAN_CIDR "${MIXER_TUNNEL_LAN_CIDR:?}"
 require_address MIXER_TUNNEL_TARGET_IP "${MIXER_TUNNEL_TARGET_IP:?}"
 require_address MIXER_TUNNEL_CLIENT_IP "${MIXER_TUNNEL_CLIENT_IP:?}"
+validate_unit MIXER_TUNNEL_QOS_RATE "${MIXER_TUNNEL_QOS_RATE:?}" mbit
+validate_unit MIXER_TUNNEL_QOS_BURST "${MIXER_TUNNEL_QOS_BURST:?}" kb
+validate_unit MIXER_TUNNEL_QOS_LATENCY "${MIXER_TUNNEL_QOS_LATENCY:?}" ms
 
 case "${MIXER_TUNNEL_CLIENT_NAME:?}" in
     *[!A-Za-z0-9_.-]*|"")
@@ -76,6 +97,9 @@ printf 'ifconfig-push %s %s\n' \
 sed \
     -e "s|@VPN_NETWORK@|$MIXER_TUNNEL_VPN_NETWORK|g" \
     -e "s|@VPN_NETMASK@|$MIXER_TUNNEL_VPN_NETMASK|g" \
+    -e "s|@QOS_RATE@|$MIXER_TUNNEL_QOS_RATE|g" \
+    -e "s|@QOS_BURST@|$MIXER_TUNNEL_QOS_BURST|g" \
+    -e "s|@QOS_LATENCY@|$MIXER_TUNNEL_QOS_LATENCY|g" \
     "$TEMPLATE" > "$CONFIG"
 
 iptables -C FORWARD -i tun0 -d "$MIXER_TUNNEL_LAN_CIDR" -j ACCEPT 2>/dev/null ||

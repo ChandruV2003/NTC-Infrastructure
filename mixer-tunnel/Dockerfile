@@ -10,6 +10,7 @@ COPY scripts/container-entrypoint.sh /opt/mixer-tunnel/container-entrypoint.sh
 COPY scripts/healthcheck.sh /opt/mixer-tunnel/healthcheck.sh
 COPY scripts/host-return-entrypoint.sh /opt/mixer-tunnel/host-return-entrypoint.sh
 COPY scripts/host-return-healthcheck.sh /opt/mixer-tunnel/host-return-healthcheck.sh
+COPY scripts/configure-tunnel-qos.sh /opt/mixer-tunnel/configure-tunnel-qos.sh
 
 RUN chmod 0755 /opt/mixer-tunnel/*.sh
 

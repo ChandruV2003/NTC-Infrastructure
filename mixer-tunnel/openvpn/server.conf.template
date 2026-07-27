@@ -17,6 +17,8 @@ data-ciphers AES-256-GCM:CHACHA20-POLY1305:AES-128-GCM
 verify-client-cert require
 remote-cert-tls client
 client-config-dir /state/runtime/ccd
+script-security 2
+up "/opt/mixer-tunnel/configure-tunnel-qos.sh @QOS_RATE@ @QOS_BURST@ @QOS_LATENCY@"
 keepalive 5 30
 tcp-nodelay
 persist-key
