@@ -180,7 +180,7 @@ Current safety defaults:
 - Transcription is off per room until it is enabled from The Translator panel
 - The room-level transcription switch is stored in SQLite, so toggling it does not require a WebCall container restart
 - The default provider is OpenAI; Telnyx, local command, and local HTTP providers are also supported
-- Local command transcription is blocked unless `NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND=1`; use `local_http` for offloading to the M4 Mac mini
+- Local command transcription is blocked unless `NTC_TRANSCRIPTION_ALLOW_LOCAL_COMMAND=1`; use `local_http` for offloading to the NTC Operations Mac Pro
 - Translated audio output defaults to off and is controlled from The Translator, not WebCall admin settings
 - The translated audio target language is selected in The Translator and saved per source laptop
 - Queued translated WAV files are pulled by the Envy agent only when room output is on
@@ -208,24 +208,24 @@ NTC_TRANSCRIPTION_LOCAL_COMMAND=whisper-cli -m /app/data/models/ggml-base.en.bin
 NTC_TRANSCRIPTION_TIMEOUT_SECONDS=25
 ```
 
-For offloading transcription to the M4 Mac mini, run the Whisper large bridge on the M4 and point the NAS at it. Production should use the M4 endpoint, not the Debian Mac mini:
-
-```bash
-python3 tools/whisper_large_server.py \
-  --host 0.0.0.0 \
-  --port 8766 \
-  --model openai/whisper-large-v3 \
-  --device cpu \
-  --quiet
-```
+For offloading transcription, run the managed dual-lane Whisper bridge on the
+NTC Operations Mac Pro and point the NAS at it. The live lane uses
+`large-v3-turbo` on GPU 0. Recorder and refinement requests use full
+`large-v3` on GPU 1, so long jobs cannot block rolling speech.
 
 ```env
 NTC_TRANSCRIPTION_PROVIDER=local_http
-NTC_TRANSCRIPTION_LOCAL_URL=http://100.66.210.59:8766/transcription
+NTC_TRANSCRIPTION_LOCAL_URL=http://100.109.220.95:8766/transcription
 NTC_TRANSCRIPTION_TIMEOUT_SECONDS=45
+NTC_TRANSCRIPTION_CHUNK_SECONDS=10.0
+NTC_TRANSCRIPTION_MIN_CHUNK_SECONDS=7.0
+NTC_TRANSCRIPTION_MAX_CHUNK_SECONDS=12.0
 ```
 
-Current production intent: use `local_http` for live transcription so the NAS only prepares chunks and stores transcript rows. The M4 Mac mini owns Whisper large-v3 transcription. The Debian Mac mini is a development/control host and should not run the live transcription workload.
+Current production intent: use `local_http` so the NAS prepares audio chunks
+and stores transcript rows while the NTC Operations Mac Pro owns both Whisper
+lanes. The M4 Mac mini remains dedicated to JVT workloads, and the Debian Mac
+mini remains a development/control host.
 
 `NTC_TRANSCRIPTION_TIMEOUT_SECONDS` controls how long a single local transcription call may take. If the local command is too slow for the configured chunk size, captions will lag behind the meeting. `NTC_TRANSCRIPTION_MIN_RMS_DB` skips quiet chunks before they reach the transcriber. `NTC_TRANSCRIPTION_SUPPRESS_REGEX` skips final text that only describes non-speech audio, such as `(upbeat music)`.
 
@@ -234,7 +234,7 @@ Replay a saved recording through the same local transcription handoff without to
 ```bash
 python3 scripts/replay_transcription_sample.py \
   --provider local_http \
-  --local-url http://100.66.210.59:8766/transcription \
+  --local-url http://100.109.220.95:8766/transcription \
   --room room-a \
   --limit-seconds 60 \
   data/diagnostic-audio/hearing-example.wav
