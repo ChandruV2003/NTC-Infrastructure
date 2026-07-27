@@ -8,3 +8,5 @@ __pycache__/
 
 /backups/
 /data/
+/mixer-tunnel/admin-state/
+/mixer-tunnel/server-state/

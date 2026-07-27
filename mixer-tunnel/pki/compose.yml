@@ -1,0 +1,12 @@
+name: ntc-mixer-tunnel-pki
+
+services:
+  pki:
+    build:
+      context: .
+    image: ntc-mixer-tunnel-pki:local
+    user: "${MIXER_TUNNEL_PKI_UID:-1000}:${MIXER_TUNNEL_PKI_GID:-1000}"
+    env_file:
+      - ../.env
+    volumes:
+      - ${MIXER_TUNNEL_ADMIN_STATE_DIR:-../admin-state}:/state

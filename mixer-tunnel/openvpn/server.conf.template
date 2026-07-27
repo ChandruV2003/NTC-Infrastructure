@@ -1,0 +1,27 @@
+port 2443
+proto tcp-server
+dev tun
+topology subnet
+
+server @VPN_NETWORK@ @VPN_NETMASK@
+
+ca /state/pki/ca.crt
+cert /state/pki/issued/server.crt
+key /state/pki/private/server.key
+crl-verify /state/pki/crl.pem
+dh none
+tls-crypt /state/pki/tls-crypt.key
+tls-version-min 1.2
+data-ciphers AES-256-GCM:CHACHA20-POLY1305:AES-128-GCM
+
+verify-client-cert require
+remote-cert-tls client
+keepalive 5 30
+tcp-nodelay
+persist-key
+persist-tun
+ifconfig-pool-persist /state/runtime/ip-pool.txt
+status /state/runtime/status.log 10
+status-version 2
+max-clients 4
+verb 3

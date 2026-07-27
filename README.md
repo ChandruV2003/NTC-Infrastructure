@@ -9,6 +9,7 @@ Secrets, live `.env` files, SQLite databases, prompt audio, and generated HLS/ru
 - Docker Compose templates
 - Nginx/HLS edge and public route configuration
 - Cloudflare Telnyx proxy worker source
+- Reliable mixer-control tunnel configuration
 - WebCall and telephony runbooks
 
 ## Host Boundaries
@@ -42,6 +43,10 @@ browser/proxy processing surface moved to the Mac Pro as `NTC-MultiTrack`.
 - `ntc-autosync-mix`
 - `ntc-tascam-da6400-control`
 - `ntc-denon-dn700r-control`
+
+`mixer-tunnel/` contains the isolated OpenVPN-over-TCP endpoint for remote
+MixPad control of devices on the NTC AV LAN. It binds only to the TrueNAS
+Tailscale address and does not advertise a default route.
 
 Analysis-only AES67 subscriptions run on the Mac Pro under NTC Dante. The
 production Dante-to-WebCall bridge remains on TrueNAS.

@@ -1,0 +1,42 @@
+name: ntc-mixer-tunnel
+
+services:
+  mixer-tunnel:
+    build:
+      context: .
+    image: ntc-mixer-tunnel:local
+    container_name: ntc-mixer-tunnel
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      net.ipv4.ip_forward: "1"
+    ports:
+      - "${MIXER_TUNNEL_BIND_ADDRESS:-100.69.202.29}:${MIXER_TUNNEL_PORT:-2443}:2443/tcp"
+    environment:
+      MIXER_TUNNEL_SITE_ID: ${MIXER_TUNNEL_SITE_ID:-ntc}
+      MIXER_TUNNEL_SERVER_TAILSCALE_IP: ${MIXER_TUNNEL_SERVER_TAILSCALE_IP:-100.69.202.29}
+      MIXER_TUNNEL_PORT: ${MIXER_TUNNEL_PORT:-2443}
+      MIXER_TUNNEL_VPN_NETWORK: ${MIXER_TUNNEL_VPN_NETWORK:-10.254.10.0}
+      MIXER_TUNNEL_VPN_NETMASK: ${MIXER_TUNNEL_VPN_NETMASK:-255.255.255.0}
+      MIXER_TUNNEL_VPN_CIDR: ${MIXER_TUNNEL_VPN_CIDR:-10.254.10.0/24}
+      MIXER_TUNNEL_LAN_NETWORK: ${MIXER_TUNNEL_LAN_NETWORK:-192.168.10.0}
+      MIXER_TUNNEL_LAN_NETMASK: ${MIXER_TUNNEL_LAN_NETMASK:-255.255.255.0}
+      MIXER_TUNNEL_LAN_CIDR: ${MIXER_TUNNEL_LAN_CIDR:-192.168.10.0/24}
+      MIXER_TUNNEL_TARGET_IP: ${MIXER_TUNNEL_TARGET_IP:-192.168.10.56}
+      MIXER_TUNNEL_CLIENT_NAME: ${MIXER_TUNNEL_CLIENT_NAME:-ntc-mixpad-mac}
+    volumes:
+      - ${MIXER_TUNNEL_SERVER_STATE_DIR:-./server-state}/pki/ca.crt:/state/pki/ca.crt:ro
+      - ${MIXER_TUNNEL_SERVER_STATE_DIR:-./server-state}/pki/issued/server.crt:/state/pki/issued/server.crt:ro
+      - ${MIXER_TUNNEL_SERVER_STATE_DIR:-./server-state}/pki/private/server.key:/state/pki/private/server.key:ro
+      - ${MIXER_TUNNEL_SERVER_STATE_DIR:-./server-state}/pki/crl.pem:/state/pki/crl.pem:ro
+      - ${MIXER_TUNNEL_SERVER_STATE_DIR:-./server-state}/pki/tls-crypt.key:/state/pki/tls-crypt.key:ro
+      - ${MIXER_TUNNEL_SERVER_STATE_DIR:-./server-state}/runtime:/state/runtime
+    healthcheck:
+      test: ["CMD", "/opt/mixer-tunnel/healthcheck.sh"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
