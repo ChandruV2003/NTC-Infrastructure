@@ -60,7 +60,6 @@ umask 077
         "nobind" \
         "resolv-retry infinite" \
         "connect-retry 2 30" \
-        "connect-retry-max unlimited" \
         "persist-key" \
         "persist-tun" \
         "route-nopull" \
