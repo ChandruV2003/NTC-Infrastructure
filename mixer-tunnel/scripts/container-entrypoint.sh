@@ -100,6 +100,8 @@ sed \
     -e "s|@QOS_RATE@|$MIXER_TUNNEL_QOS_RATE|g" \
     -e "s|@QOS_BURST@|$MIXER_TUNNEL_QOS_BURST|g" \
     -e "s|@QOS_LATENCY@|$MIXER_TUNNEL_QOS_LATENCY|g" \
+    -e "s|@TARGET_IP@|$MIXER_TUNNEL_TARGET_IP|g" \
+    -e "s|@CLIENT_IP@|$MIXER_TUNNEL_CLIENT_IP|g" \
     "$TEMPLATE" > "$CONFIG"
 
 iptables -C FORWARD -i tun0 -d "$MIXER_TUNNEL_LAN_CIDR" -j ACCEPT 2>/dev/null ||

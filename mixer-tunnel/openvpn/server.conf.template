@@ -18,7 +18,7 @@ verify-client-cert require
 remote-cert-tls client
 client-config-dir /state/runtime/ccd
 script-security 2
-up "/opt/mixer-tunnel/configure-tunnel-qos.sh @QOS_RATE@ @QOS_BURST@ @QOS_LATENCY@"
+up "/opt/mixer-tunnel/configure-tunnel-qos.sh @QOS_RATE@ @QOS_BURST@ @QOS_LATENCY@ @TARGET_IP@ @CLIENT_IP@"
 keepalive 5 30
 tcp-nodelay
 persist-key

@@ -33,9 +33,9 @@ require_address() {
 RATE="${1:?Missing pacing rate}"
 BURST="${2:?Missing pacing burst}"
 LATENCY="${3:?Missing pacing latency}"
-DEVICE="${4:?Missing tunnel interface}"
-TARGET_IP="${MIXER_TUNNEL_TARGET_IP:?}"
-CLIENT_IP="${MIXER_TUNNEL_CLIENT_IP:?}"
+TARGET_IP="${4:?Missing mixer address}"
+CLIENT_IP="${5:?Missing VPN client address}"
+DEVICE="${6:?Missing tunnel interface}"
 
 case "$DEVICE" in
     *[!A-Za-z0-9_.:-]*|"")
@@ -50,10 +50,11 @@ validate_unit MIXER_TUNNEL_QOS_LATENCY "$LATENCY" ms
 require_address MIXER_TUNNEL_TARGET_IP "$TARGET_IP"
 require_address MIXER_TUNNEL_CLIENT_IP "$CLIENT_IP"
 
-tc qdisc replace dev "$DEVICE" root handle 1: prio \
+tc qdisc del dev "$DEVICE" root 2>/dev/null || true
+tc qdisc add dev "$DEVICE" root handle 1: prio \
     bands 2 \
     priomap 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-tc qdisc replace dev "$DEVICE" parent 1:2 handle 20: tbf \
+tc qdisc add dev "$DEVICE" parent 1:2 handle 20: tbf \
     rate "$RATE" \
     burst "$BURST" \
     latency "$LATENCY"
