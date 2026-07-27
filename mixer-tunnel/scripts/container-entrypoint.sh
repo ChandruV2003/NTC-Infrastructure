@@ -48,15 +48,23 @@ case "${MIXER_TUNNEL_CLIENT_NAME:?}" in
         ;;
 esac
 
-case "${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT:?}" in
+case "${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START:?}" in
     *[!0-9]*|"")
-        echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT must be numeric" >&2
+        echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START must be numeric" >&2
         exit 1
         ;;
 esac
-if [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" -lt 1 ] ||
-    [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" -gt 65535 ]; then
-    echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT is outside the valid range" >&2
+case "${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END:?}" in
+    *[!0-9]*|"")
+        echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END must be numeric" >&2
+        exit 1
+        ;;
+esac
+if [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START" -lt 1 ] ||
+    [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" -gt 65535 ] ||
+    [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START" -gt \
+        "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" ]; then
+    echo "Mixer return UDP source ports are outside the valid range" >&2
     exit 1
 fi
 
@@ -78,10 +86,12 @@ iptables -C FORWARD -s "$MIXER_TUNNEL_LAN_CIDR" -o tun0 \
         -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -C FORWARD -i eth0 -o tun0 \
     -s "$MIXER_TUNNEL_TARGET_IP/32" -d "$MIXER_TUNNEL_CLIENT_IP/32" \
-    -p udp --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" -j ACCEPT 2>/dev/null ||
+    -p udp --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START:$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" \
+    -j ACCEPT 2>/dev/null ||
     iptables -I FORWARD 1 -i eth0 -o tun0 \
         -s "$MIXER_TUNNEL_TARGET_IP/32" -d "$MIXER_TUNNEL_CLIENT_IP/32" \
-        -p udp --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" -j ACCEPT
+        -p udp --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START:$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" \
+        -j ACCEPT
 iptables -C FORWARD -i tun0 -j DROP 2>/dev/null ||
     iptables -A FORWARD -i tun0 -j DROP
 iptables -t nat -C POSTROUTING -s "$MIXER_TUNNEL_VPN_CIDR" \

@@ -27,15 +27,23 @@ case "${MIXER_TUNNEL_LAN_INTERFACE:?}" in
         ;;
 esac
 
-case "${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT:?}" in
+case "${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START:?}" in
     *[!0-9]*|"")
-        echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT must be numeric" >&2
+        echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START must be numeric" >&2
         exit 1
         ;;
 esac
-if [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" -lt 1 ] ||
-    [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" -gt 65535 ]; then
-    echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT is outside the valid range" >&2
+case "${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END:?}" in
+    *[!0-9]*|"")
+        echo "MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END must be numeric" >&2
+        exit 1
+        ;;
+esac
+if [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START" -lt 1 ] ||
+    [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" -gt 65535 ] ||
+    [ "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START" -gt \
+        "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" ]; then
+    echo "Mixer return UDP source ports are outside the valid range" >&2
     exit 1
 fi
 
@@ -44,7 +52,8 @@ nat_rule() {
         -i "$MIXER_TUNNEL_LAN_INTERFACE" \
         -s "$MIXER_TUNNEL_TARGET_IP/32" \
         -d "$MIXER_TUNNEL_LAN_ADDRESS/32" \
-        -p udp --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" \
+        -p udp \
+        --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START:$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" \
         -m comment --comment "$RULE_COMMENT" \
         -j DNAT --to-destination "$MIXER_TUNNEL_CLIENT_IP"
 }
@@ -54,7 +63,8 @@ forward_rule() {
         -i "$MIXER_TUNNEL_LAN_INTERFACE" \
         -s "$MIXER_TUNNEL_TARGET_IP/32" \
         -d "$MIXER_TUNNEL_CLIENT_IP/32" \
-        -p udp --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT" \
+        -p udp \
+        --sport "$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_START:$MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT_END" \
         -m comment --comment "$RULE_COMMENT" \
         -j ACCEPT
 }

@@ -14,8 +14,8 @@ client profile.
 - Tunnel network: `10.254.10.0/24`.
 - Client route: SQ at `192.168.10.56/32`.
 - Server forwarding boundary: `192.168.10.0/24`.
-- Reverse mixer stream: UDP source port `51324` from the SQ to the single
-  configured VPN client.
+- Reverse mixer stream: UDP source ports `51324-51331` from the SQ to the
+  single configured VPN client.
 - No default route or DNS settings are sent to the client.
 - Mixer discovery broadcasts are not bridged. Connect to the SQ by its direct
   address when automatic discovery is unavailable.
@@ -26,10 +26,11 @@ changing the three `MIXER_TUNNEL_LAN_*` values and
 not need to be replaced.
 
 The SQ opens its control connection on TCP port `51326`, then sends a
-server-initiated UDP stream from port `51324` to the app's negotiated UDP
-port. The `host-return-path` service preserves that destination port while
-translating the packet to the fixed VPN client address. Its route and firewall
-rules are removed when the service stops cleanly.
+server-initiated UDP stream starting at port `51324` to the app's negotiated
+UDP port. Additional mixer clients use the next source ports in sequence. The
+`host-return-path` service preserves the destination port while translating
+the packet to the fixed VPN client address. Its route and firewall rules are
+removed when the service stops cleanly.
 
 The generated profile installs a host route instead of another
 `192.168.10.0/24` route. That host route takes precedence over Tailscale's
