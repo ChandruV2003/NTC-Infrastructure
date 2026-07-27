@@ -479,6 +479,7 @@ services:
       NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS: ${NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS:-/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/TestimonyReviewQueue,/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-primary,/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-webremote-primary,/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/CombinedReview}
       NTC_RECORDINGS_TESTIMONY_RECORDER_MANIFESTS: ${NTC_RECORDINGS_TESTIMONY_RECORDER_MANIFESTS:-/app/data/autosyncmix/recorders/DN700R/manifest.sqlite3}
       NTC_TRANSCRIPTION_LOCAL_URL: ${NTC_TRANSCRIPTION_LOCAL_URL:-}
+      NTC_RECORDINGS_AGENT_URL: ${NTC_RECORDINGS_AGENT_URL:-http://172.16.5.1:1982}
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
       - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:rw

@@ -1,0 +1,8 @@
+[Unit]
+Description=Proxy Docker bridge traffic to NTC Agent loopback
+Requires=ntc-agent.service
+After=ntc-agent.service
+
+[Service]
+ExecStart=/lib/systemd/systemd-socket-proxyd 127.0.0.1:1981
+PrivateTmp=true

@@ -1,0 +1,10 @@
+[Unit]
+Description=NTC Agent Docker bridge socket
+After=network.target
+
+[Socket]
+ListenStream=172.16.5.1:1982
+NoDelay=true
+
+[Install]
+WantedBy=sockets.target
