@@ -26,6 +26,8 @@ services:
       MIXER_TUNNEL_LAN_NETMASK: ${MIXER_TUNNEL_LAN_NETMASK:-255.255.255.0}
       MIXER_TUNNEL_LAN_CIDR: ${MIXER_TUNNEL_LAN_CIDR:-192.168.10.0/24}
       MIXER_TUNNEL_TARGET_IP: ${MIXER_TUNNEL_TARGET_IP:-192.168.10.56}
+      MIXER_TUNNEL_CLIENT_IP: ${MIXER_TUNNEL_CLIENT_IP:-10.254.10.2}
+      MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT: ${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT:-51324}
       MIXER_TUNNEL_CLIENT_NAME: ${MIXER_TUNNEL_CLIENT_NAME:-ntc-mixpad-mac}
     volumes:
       - ${MIXER_TUNNEL_SERVER_STATE_DIR:-./server-state}/pki/ca.crt:/state/pki/ca.crt:ro
@@ -40,3 +42,42 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      tunnel-backend:
+        ipv4_address: ${MIXER_TUNNEL_CONTAINER_IP:-172.30.254.2}
+
+  host-return-path:
+    image: ntc-mixer-tunnel:local
+    container_name: ntc-mixer-tunnel-return
+    restart: unless-stopped
+    depends_on:
+      mixer-tunnel:
+        condition: service_healthy
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    read_only: true
+    tmpfs:
+      - /run
+    entrypoint: ["/opt/mixer-tunnel/host-return-entrypoint.sh"]
+    environment:
+      MIXER_TUNNEL_VPN_CIDR: ${MIXER_TUNNEL_VPN_CIDR:-10.254.10.0/24}
+      MIXER_TUNNEL_CLIENT_IP: ${MIXER_TUNNEL_CLIENT_IP:-10.254.10.2}
+      MIXER_TUNNEL_CONTAINER_IP: ${MIXER_TUNNEL_CONTAINER_IP:-172.30.254.2}
+      MIXER_TUNNEL_LAN_INTERFACE: ${MIXER_TUNNEL_LAN_INTERFACE:-enp9s0}
+      MIXER_TUNNEL_LAN_ADDRESS: ${MIXER_TUNNEL_LAN_ADDRESS:-192.168.10.77}
+      MIXER_TUNNEL_TARGET_IP: ${MIXER_TUNNEL_TARGET_IP:-192.168.10.56}
+      MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT: ${MIXER_TUNNEL_RETURN_UDP_SOURCE_PORT:-51324}
+    healthcheck:
+      test: ["CMD", "/opt/mixer-tunnel/host-return-healthcheck.sh"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  tunnel-backend:
+    name: ntc-mixer-tunnel-backend
+    ipam:
+      config:
+        - subnet: ${MIXER_TUNNEL_CONTAINER_SUBNET:-172.30.254.0/29}
