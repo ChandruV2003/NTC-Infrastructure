@@ -476,7 +476,7 @@ services:
       NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_URL: ${NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_URL:-}
       NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_TIMEOUT: ${NTC_RECORDINGS_TESTIMONY_TRANSCRIBE_TIMEOUT:-120}
       NTC_RECORDINGS_TESTIMONY_SOURCE_DIR: ${NTC_RECORDINGS_TESTIMONY_SOURCE_DIR:-/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/TestimonyReviewQueue}
-      NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS: ${NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS:-/mnt/MainRecordings/Recordings/_IncomingRecorderIntake}
+      NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS: ${NTC_RECORDINGS_TESTIMONY_ALLOWED_DIRS:-/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/TestimonyReviewQueue,/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-primary,/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-webremote-primary,/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/CombinedReview}
       NTC_RECORDINGS_TESTIMONY_RECORDER_MANIFESTS: ${NTC_RECORDINGS_TESTIMONY_RECORDER_MANIFESTS:-/app/data/autosyncmix/recorders/DN700R/manifest.sqlite3}
       NTC_TRANSCRIPTION_LOCAL_URL: ${NTC_TRANSCRIPTION_LOCAL_URL:-}
     volumes:
@@ -485,7 +485,10 @@ services:
       - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:ro
       - /mnt/MainRecordings/Recordings/TestimonyRecordings:/mnt/MainRecordings/Recordings/TestimonyRecordings:rw
       - /mnt/MainRecordings/Recordings/BabyDedicationRecordings:/mnt/MainRecordings/Recordings/BabyDedicationRecordings:rw
-      - /mnt/MainRecordings/Recordings/_IncomingRecorderIntake:/mnt/MainRecordings/Recordings/_IncomingRecorderIntake:rw
+      - /mnt/MainRecordings/Recordings/_IncomingRecorderIntake/TestimonyReviewQueue:/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/TestimonyReviewQueue:rw
+      - /mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-primary:/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-primary:rw
+      - /mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-webremote-primary:/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/DN700R-webremote-primary:rw
+      - /mnt/MainRecordings/Recordings/_IncomingRecorderIntake/CombinedReview:/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/CombinedReview:rw
     command:
       - gunicorn
       - -w
