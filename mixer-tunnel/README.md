@@ -14,6 +14,8 @@ client profile.
 - Tunnel network: `10.254.10.0/24`.
 - Client route: SQ at `192.168.10.56/32`.
 - Server forwarding boundary: `192.168.10.0/24`.
+- Reverse mixer stream: UDP source port `51324` from the SQ to the single
+  configured VPN client.
 - No default route or DNS settings are sent to the client.
 - Mixer discovery broadcasts are not bridged. Connect to the SQ by its direct
   address when automatic discovery is unavailable.
@@ -22,6 +24,12 @@ All addresses are configured in `.env`. A future AV LAN renumber requires
 changing the three `MIXER_TUNNEL_LAN_*` values and
 `MIXER_TUNNEL_TARGET_IP`, then rendering a new client profile. The PKI does
 not need to be replaced.
+
+The SQ opens its control connection on TCP port `51326`, then sends a
+server-initiated UDP stream from port `51324` to the app's negotiated UDP
+port. The `host-return-path` service preserves that destination port while
+translating the packet to the fixed VPN client address. Its route and firewall
+rules are removed when the service stops cleanly.
 
 The generated profile installs a host route instead of another
 `192.168.10.0/24` route. That host route takes precedence over Tailscale's
@@ -67,6 +75,11 @@ docker compose up -d
 docker compose ps
 ```
 
+Both `mixer-tunnel` and `ntc-mixer-tunnel-return` must report healthy. The
+return-path helper uses host networking only to manage the exact VPN route and
+the two mixer-specific firewall rules. OpenVPN remains in its isolated bridge
+network.
+
 Import the generated profile into an OpenVPN client on the Mac. Tailscale must
 already be connected because the profile's remote endpoint is a Tailscale IP.
 
@@ -77,6 +90,7 @@ Check container health and verify the restricted route from the Mac:
 ```sh
 docker compose ps
 docker compose logs --tail=100 mixer-tunnel
+docker compose logs --tail=100 host-return-path
 route -n get 192.168.10.56
 ping -c 5 192.168.10.56
 ```

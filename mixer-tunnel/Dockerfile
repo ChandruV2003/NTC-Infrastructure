@@ -8,6 +8,8 @@ RUN apk add --no-cache \
 COPY openvpn/server.conf.template /opt/mixer-tunnel/server.conf.template
 COPY scripts/container-entrypoint.sh /opt/mixer-tunnel/container-entrypoint.sh
 COPY scripts/healthcheck.sh /opt/mixer-tunnel/healthcheck.sh
+COPY scripts/host-return-entrypoint.sh /opt/mixer-tunnel/host-return-entrypoint.sh
+COPY scripts/host-return-healthcheck.sh /opt/mixer-tunnel/host-return-healthcheck.sh
 
 RUN chmod 0755 /opt/mixer-tunnel/*.sh
 
