@@ -32,11 +32,13 @@ UDP port. Additional mixer clients use the next source ports in sequence. The
 the packet to the fixed VPN client address. Its route and firewall rules are
 removed when the service stops cleanly.
 
-The tunnel applies a `6mbit` token-bucket queue on its Mac-bound interface.
-This absorbs the mixer's initial state and metering bursts near the SQ and
-releases them at a steady rate instead of overflowing the remote app's UDP
-socket. The rate, burst allowance, and maximum queue latency are configured
-with the three `MIXER_TUNNEL_QOS_*` values.
+The tunnel applies a `6mbit` token-bucket queue only to mixer-originated UDP
+traffic for the configured VPN client. This absorbs the SQ's initial state and
+metering bursts near the mixer and releases them steadily instead of
+overflowing the remote app's UDP socket. TCP control, OpenVPN keepalives, and
+other traffic bypass the pacing queue so they cannot be delayed behind the
+metering stream. The rate, burst allowance, and maximum queue latency are
+configured with the three `MIXER_TUNNEL_QOS_*` values.
 
 The generated profile installs a host route instead of another
 `192.168.10.0/24` route. That host route takes precedence over Tailscale's
