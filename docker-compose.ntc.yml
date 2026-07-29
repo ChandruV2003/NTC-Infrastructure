@@ -484,7 +484,7 @@ services:
     volumes:
       - ${NTC_RUNTIME_DIR:-../NTC-Runtime}:/app/data
       - /mnt/MainRecordings/Recordings/MessageRecordings:/mnt/MainRecordings/Recordings/MessageRecordings:rw
-      - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:ro
+      - /mnt/MainRecordings/Recordings/WorshipRecordings:/mnt/MainRecordings/Recordings/WorshipRecordings:rw
       - /mnt/MainRecordings/Recordings/TestimonyRecordings:/mnt/MainRecordings/Recordings/TestimonyRecordings:rw
       - /mnt/MainRecordings/Recordings/BabyDedicationRecordings:/mnt/MainRecordings/Recordings/BabyDedicationRecordings:rw
       - /mnt/MainRecordings/Recordings/_IncomingRecorderIntake/TestimonyReviewQueue:/mnt/MainRecordings/Recordings/_IncomingRecorderIntake/TestimonyReviewQueue:rw
