@@ -210,22 +210,36 @@ NTC_TRANSCRIPTION_TIMEOUT_SECONDS=25
 
 For offloading transcription, run the managed dual-lane Whisper bridge on the
 NTC Operations Mac Pro and point the NAS at it. The live lane uses
-`large-v3-turbo` on GPU 0. Recorder and refinement requests use full
-`large-v3` on GPU 1, so long jobs cannot block rolling speech.
+`large-v3-turbo` on GPU 1. Recorder and refinement requests use full
+`large-v3` on GPU 0, so long jobs cannot block rolling speech.
 
 ```env
 NTC_TRANSCRIPTION_PROVIDER=local_http
-NTC_TRANSCRIPTION_LOCAL_URL=http://100.109.220.95:8766/transcription
-NTC_TRANSCRIPTION_TIMEOUT_SECONDS=45
-NTC_TRANSCRIPTION_CHUNK_SECONDS=10.0
-NTC_TRANSCRIPTION_MIN_CHUNK_SECONDS=7.0
-NTC_TRANSCRIPTION_MAX_CHUNK_SECONDS=12.0
+NTC_TRANSCRIPTION_LOCAL_LIVE_URLS=http://192.168.10.73:8766/transcription,http://100.109.220.95:8766/transcription
+NTC_TRANSCRIPTION_LOCAL_BATCH_URLS=http://192.168.10.73:8766/transcription,http://100.109.220.95:8766/transcription
+NTC_TRANSCRIPTION_CHUNK_SECONDS=3.2
+NTC_TRANSCRIPTION_MIN_CHUNK_SECONDS=1.8
+NTC_TRANSCRIPTION_MAX_CHUNK_SECONDS=6.0
+NTC_TRANSCRIPTION_QUEUE_SECONDS=6.0
+NTC_TRANSCRIPTION_POLL_MS=250
+NTC_TRANSCRIPTION_WORD_DELAY_MS=0
+NTC_TRANSCRIPTION_WORD_DELAY_CAP_MS=0
+NTC_TRANSCRIPTION_BATCH_FALLBACK_ON_BUSY=0
 ```
 
 Current production intent: use `local_http` so the NAS prepares audio chunks
 and stores transcript rows while the NTC Operations Mac Pro owns both Whisper
-lanes. The M4 Mac mini remains dedicated to JVT workloads, and the Debian Mac
+lanes. The AV LAN address is primary for audio-worker traffic; Tailscale is the
+same-host fallback, not the normal media path. Live and batch URL lists stay
+separate so a saturated refinement job cannot consume an unrelated fallback
+worker. The M4 Mac mini remains dedicated to JVT workloads, and the Debian Mac
 mini remains a development/control host.
+
+The live path is freshness-first. Keep its source queue bounded to a few
+seconds, publish words without an artificial reveal delay, and discard stale
+audio instead of allowing transcription to fall minutes behind. The full
+`large-v3` refinement path is accuracy-first and coalesces queued work when the
+batch lane is busy; it must never delay rolling captions.
 
 `NTC_TRANSCRIPTION_TIMEOUT_SECONDS` controls how long a single local transcription call may take. If the local command is too slow for the configured chunk size, captions will lag behind the meeting. `NTC_TRANSCRIPTION_MIN_RMS_DB` skips quiet chunks before they reach the transcriber. `NTC_TRANSCRIPTION_SUPPRESS_REGEX` skips final text that only describes non-speech audio, such as `(upbeat music)`.
 
